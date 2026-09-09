@@ -72,6 +72,11 @@ function CheckoutPage() {
   });
   const [payment, setPayment] = useState("demo");
   const [delivery, setDelivery] = useState("standard");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -79,7 +84,8 @@ function CheckoutPage() {
   const selectedDelivery =
     DELIVERY_OPTIONS.find((option) => option.id === delivery) ?? DELIVERY_OPTIONS[0];
   const shipping = total >= 80 && delivery === "standard" ? 0 : selectedDelivery.fee;
-  const grandTotal = total + shipping;
+  const totalWithCoupon = total + couponDiscount;
+  const grandTotal = totalWithCoupon + shipping;
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/connexion" });
@@ -97,6 +103,86 @@ function CheckoutPage() {
       country: profile.country || current.country,
     }));
   }, [profile]);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Veuillez entrer un code");
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError(null);
+
+    try {
+      const { data: coupon, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", couponCode.toUpperCase())
+        .single();
+
+      if (error || !coupon) {
+        setCouponError("Code de réduction invalide");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      // Check if coupon is active and not expired
+      if (!coupon.is_active) {
+        setCouponError("Ce code de réduction n'est pas actif");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      if (coupon.expiration_date && new Date(coupon.expiration_date) < new Date()) {
+        setCouponError("Ce code de réduction a expiré");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      // Check usage limit
+      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+        setCouponError("Ce code de réduction a atteint sa limite d'utilisation");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      // Check minimum order value
+      if (coupon.minimum_order_value && total < coupon.minimum_order_value) {
+        setCouponError(
+          `Montant minimum requis : ${formatPrice(coupon.minimum_order_value)}`
+        );
+        setValidatingCoupon(false);
+        return;
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.coupon_type === "percentage") {
+        discountAmount = -(total * coupon.discount_value) / 100;
+        if (coupon.maximum_discount && Math.abs(discountAmount) > coupon.maximum_discount) {
+          discountAmount = -coupon.maximum_discount;
+        }
+      } else {
+        discountAmount = -coupon.discount_value;
+      }
+
+      setCouponDiscount(discountAmount);
+      setCouponApplied(true);
+      setCouponError(null);
+      toast.success("Code appliqué !");
+    } catch (err) {
+      setCouponError("Une erreur est survenue");
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode("");
+    setCouponDiscount(0);
+    setCouponApplied(false);
+    setCouponError(null);
+  };
 
   const set =
     (key: keyof CheckoutForm) =>
@@ -154,7 +240,7 @@ function CheckoutPage() {
               ? "Sous 24 heures"
               : "2 à 5 jours ouvrés",
         subtotal,
-        discount,
+        discount: discount + Math.abs(couponDiscount),
         shipping,
         total: grandTotal,
         payment_method: payment,
@@ -186,6 +272,25 @@ function CheckoutPage() {
       setSubmitting(false);
       setError("Les articles de la commande n'ont pas pu être enregistrés.");
       return;
+    }
+
+    // Increment coupon usage count if coupon was applied
+    if (couponApplied && couponCode) {
+      const { data: coupon } = await supabase
+        .from("coupons")
+        .select("usage_count")
+        .eq("code", couponCode.toUpperCase())
+        .single();
+
+      if (coupon) {
+        await supabase
+          .from("coupons")
+          .update({ usage_count: coupon.usage_count + 1 })
+          .eq("code", couponCode.toUpperCase())
+          .catch(() => {
+            // Fail silently - order was already created
+          });
+      }
     }
 
     await Promise.all(
@@ -369,6 +474,49 @@ function CheckoutPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Simulation uniquement : aucun débit réel ne sera effectué.
                 </p>
+
+                {/* Coupon section */}
+                <div className="mt-5 rounded-lg border border-border p-4">
+                  <Label htmlFor="coupon" className="mb-2 block text-sm font-medium">
+                    Code de réduction (optionnel)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="coupon"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Entrez votre code"
+                      className="font-mono"
+                      disabled={couponApplied}
+                    />
+                    {!couponApplied ? (
+                      <Button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={validatingCoupon || !couponCode.trim()}
+                        size="sm"
+                      >
+                        {validatingCoupon ? "..." : "Appliquer"}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={removeCoupon}
+                        size="sm"
+                      >
+                        Retirer
+                      </Button>
+                    )}
+                  </div>
+                  {couponError && (
+                    <p className="mt-2 text-sm text-destructive">{couponError}</p>
+                  )}
+                  {couponApplied && (
+                    <p className="mt-2 text-sm text-green-600">✓ Code appliqué</p>
+                  )}
+                </div>
+
                 <RadioGroup
                   value={payment}
                   onValueChange={setPayment}
@@ -483,6 +631,12 @@ function CheckoutPage() {
                 <div className="flex justify-between text-accent">
                   <dt>Réductions</dt>
                   <dd>-{formatPrice(discount)}</dd>
+                </div>
+              )}
+              {couponDiscount < 0 && (
+                <div className="flex justify-between text-accent">
+                  <dt>Coupon</dt>
+                  <dd>-{formatPrice(Math.abs(couponDiscount))}</dd>
                 </div>
               )}
               <div className="flex justify-between">

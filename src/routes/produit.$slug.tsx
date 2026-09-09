@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { EmptyState } from "@/components/site/EmptyState";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { ProductReviews } from "@/components/shop/ProductReviews";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -499,6 +500,8 @@ function ProductPage() {
             </div>
           </section>
         )}
+
+        <ProductReviews productId={product.id} />
       </div>
     </SiteLayout>
   );

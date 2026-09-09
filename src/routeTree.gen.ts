@@ -38,10 +38,17 @@ import { Route as ProduitSlugRouteImport } from './routes/produit.$slug'
 import { Route as AdminCategoriesIndexRouteImport } from './routes/admin.categories.index'
 import { Route as AdminCategoriesIdRouteImport } from './routes/admin.categories.$id'
 import { Route as AdminCategoriesNouvelleRouteImport } from './routes/admin.categories.nouvelle'
+import { Route as AdminCouponsIndexRouteImport } from './routes/admin.coupons.index'
+import { Route as AdminCouponsIdRouteImport } from './routes/admin.coupons.$id'
+import { Route as AdminCouponsNouveauRouteImport } from './routes/admin.coupons.nouveau'
 import { Route as AdminInventaireHistoriqueRouteImport } from './routes/admin.inventaire.historique'
 import { Route as AdminProduitsIndexRouteImport } from './routes/admin.produits.index'
 import { Route as AdminProduitsIdRouteImport } from './routes/admin.produits.$id'
 import { Route as AdminProduitsNouveauRouteImport } from './routes/admin.produits.nouveau'
+import { Route as AdminPromotionsIndexRouteImport } from './routes/admin.promotions.index'
+import { Route as AdminPromotionsIdRouteImport } from './routes/admin.promotions.$id'
+import { Route as AdminPromotionsNouvelleRouteImport } from './routes/admin.promotions.nouvelle'
+import { Route as AdminReviewsIndexRouteImport } from './routes/admin.reviews.index'
 import { Route as CompteCommandesIndexRouteImport } from './routes/compte.commandes.index'
 import { Route as CompteCommandesIdRouteImport } from './routes/compte.commandes.$id'
 
@@ -190,6 +197,21 @@ const AdminCategoriesNouvelleRoute = AdminCategoriesNouvelleRouteImport.update({
   path: '/admin/categories/nouvelle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCouponsIndexRoute = AdminCouponsIndexRouteImport.update({
+  id: '/admin/coupons/',
+  path: '/admin/coupons/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCouponsIdRoute = AdminCouponsIdRouteImport.update({
+  id: '/admin/coupons/$id',
+  path: '/admin/coupons/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCouponsNouveauRoute = AdminCouponsNouveauRouteImport.update({
+  id: '/admin/coupons/nouveau',
+  path: '/admin/coupons/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminInventaireHistoriqueRoute =
   AdminInventaireHistoriqueRouteImport.update({
     id: '/historique',
@@ -209,6 +231,26 @@ const AdminProduitsIdRoute = AdminProduitsIdRouteImport.update({
 const AdminProduitsNouveauRoute = AdminProduitsNouveauRouteImport.update({
   id: '/admin/produits/nouveau',
   path: '/admin/produits/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPromotionsIndexRoute = AdminPromotionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminPromotionsRoute,
+} as any)
+const AdminPromotionsIdRoute = AdminPromotionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminPromotionsRoute,
+} as any)
+const AdminPromotionsNouvelleRoute = AdminPromotionsNouvelleRouteImport.update({
+  id: '/nouvelle',
+  path: '/nouvelle',
+  getParentRoute: () => AdminPromotionsRoute,
+} as any)
+const AdminReviewsIndexRoute = AdminReviewsIndexRouteImport.update({
+  id: '/admin/reviews/',
+  path: '/admin/reviews/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompteCommandesIndexRoute = CompteCommandesIndexRouteImport.update({
@@ -239,7 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
-  '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/promotions': typeof AdminPromotionsRouteWithChildren
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
@@ -251,12 +293,19 @@ export interface FileRoutesByFullPath {
   '/compte/': typeof CompteIndexRoute
   '/admin/categories/$id': typeof AdminCategoriesIdRoute
   '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/nouveau': typeof AdminCouponsNouveauRoute
   '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
+  '/admin/promotions/$id': typeof AdminPromotionsIdRoute
+  '/admin/promotions/nouvelle': typeof AdminPromotionsNouvelleRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
   '/admin/categories/': typeof AdminCategoriesIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
+  '/admin/promotions/': typeof AdminPromotionsIndexRoute
+  '/admin/reviews/': typeof AdminReviewsIndexRoute
   '/compte/commandes/': typeof CompteCommandesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -276,7 +325,6 @@ export interface FileRoutesByTo {
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
-  '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
@@ -288,12 +336,19 @@ export interface FileRoutesByTo {
   '/compte': typeof CompteIndexRoute
   '/admin/categories/$id': typeof AdminCategoriesIdRoute
   '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/nouveau': typeof AdminCouponsNouveauRoute
   '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
+  '/admin/promotions/$id': typeof AdminPromotionsIdRoute
+  '/admin/promotions/nouvelle': typeof AdminPromotionsNouvelleRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
   '/admin/categories': typeof AdminCategoriesIndexRoute
+  '/admin/coupons': typeof AdminCouponsIndexRoute
   '/admin/produits': typeof AdminProduitsIndexRoute
+  '/admin/promotions': typeof AdminPromotionsIndexRoute
+  '/admin/reviews': typeof AdminReviewsIndexRoute
   '/compte/commandes': typeof CompteCommandesIndexRoute
 }
 export interface FileRoutesById {
@@ -314,7 +369,7 @@ export interface FileRoutesById {
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
-  '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/promotions': typeof AdminPromotionsRouteWithChildren
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
@@ -326,12 +381,19 @@ export interface FileRoutesById {
   '/compte/': typeof CompteIndexRoute
   '/admin/categories/$id': typeof AdminCategoriesIdRoute
   '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/nouveau': typeof AdminCouponsNouveauRoute
   '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
+  '/admin/promotions/$id': typeof AdminPromotionsIdRoute
+  '/admin/promotions/nouvelle': typeof AdminPromotionsNouvelleRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
   '/admin/categories/': typeof AdminCategoriesIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
+  '/admin/promotions/': typeof AdminPromotionsIndexRoute
+  '/admin/reviews/': typeof AdminReviewsIndexRoute
   '/compte/commandes/': typeof CompteCommandesIndexRoute
 }
 export interface FileRouteTypes {
@@ -365,12 +427,19 @@ export interface FileRouteTypes {
     | '/compte/'
     | '/admin/categories/$id'
     | '/admin/categories/nouvelle'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/nouveau'
     | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
+    | '/admin/promotions/$id'
+    | '/admin/promotions/nouvelle'
     | '/compte/commandes/$id'
     | '/admin/categories/'
+    | '/admin/coupons/'
     | '/admin/produits/'
+    | '/admin/promotions/'
+    | '/admin/reviews/'
     | '/compte/commandes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -390,7 +459,6 @@ export interface FileRouteTypes {
     | '/admin/commandes'
     | '/admin/inventaire'
     | '/admin/parametres'
-    | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/commande-confirmee/$id'
@@ -402,12 +470,19 @@ export interface FileRouteTypes {
     | '/compte'
     | '/admin/categories/$id'
     | '/admin/categories/nouvelle'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/nouveau'
     | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
+    | '/admin/promotions/$id'
+    | '/admin/promotions/nouvelle'
     | '/compte/commandes/$id'
     | '/admin/categories'
+    | '/admin/coupons'
     | '/admin/produits'
+    | '/admin/promotions'
+    | '/admin/reviews'
     | '/compte/commandes'
   id:
     | '__root__'
@@ -439,12 +514,19 @@ export interface FileRouteTypes {
     | '/compte/'
     | '/admin/categories/$id'
     | '/admin/categories/nouvelle'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/nouveau'
     | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
+    | '/admin/promotions/$id'
+    | '/admin/promotions/nouvelle'
     | '/compte/commandes/$id'
     | '/admin/categories/'
+    | '/admin/coupons/'
     | '/admin/produits/'
+    | '/admin/promotions/'
+    | '/admin/reviews/'
     | '/compte/commandes/'
   fileRoutesById: FileRoutesById
 }
@@ -465,7 +547,7 @@ export interface RootRouteChildren {
   AdminCommandesRoute: typeof AdminCommandesRoute
   AdminInventaireRoute: typeof AdminInventaireRouteWithChildren
   AdminParametresRoute: typeof AdminParametresRoute
-  AdminPromotionsRoute: typeof AdminPromotionsRoute
+  AdminPromotionsRoute: typeof AdminPromotionsRouteWithChildren
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
   CommandeConfirmeeIdRoute: typeof CommandeConfirmeeIdRoute
@@ -477,11 +559,15 @@ export interface RootRouteChildren {
   CompteIndexRoute: typeof CompteIndexRoute
   AdminCategoriesIdRoute: typeof AdminCategoriesIdRoute
   AdminCategoriesNouvelleRoute: typeof AdminCategoriesNouvelleRoute
+  AdminCouponsIdRoute: typeof AdminCouponsIdRoute
+  AdminCouponsNouveauRoute: typeof AdminCouponsNouveauRoute
   AdminProduitsIdRoute: typeof AdminProduitsIdRoute
   AdminProduitsNouveauRoute: typeof AdminProduitsNouveauRoute
   CompteCommandesIdRoute: typeof CompteCommandesIdRoute
   AdminCategoriesIndexRoute: typeof AdminCategoriesIndexRoute
+  AdminCouponsIndexRoute: typeof AdminCouponsIndexRoute
   AdminProduitsIndexRoute: typeof AdminProduitsIndexRoute
+  AdminReviewsIndexRoute: typeof AdminReviewsIndexRoute
   CompteCommandesIndexRoute: typeof CompteCommandesIndexRoute
 }
 
@@ -690,6 +776,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesNouvelleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/coupons/': {
+      id: '/admin/coupons/'
+      path: '/admin/coupons'
+      fullPath: '/admin/coupons/'
+      preLoaderRoute: typeof AdminCouponsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/coupons/$id': {
+      id: '/admin/coupons/$id'
+      path: '/admin/coupons/$id'
+      fullPath: '/admin/coupons/$id'
+      preLoaderRoute: typeof AdminCouponsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/coupons/nouveau': {
+      id: '/admin/coupons/nouveau'
+      path: '/admin/coupons/nouveau'
+      fullPath: '/admin/coupons/nouveau'
+      preLoaderRoute: typeof AdminCouponsNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/inventaire/historique': {
       id: '/admin/inventaire/historique'
       path: '/historique'
@@ -716,6 +823,34 @@ declare module '@tanstack/react-router' {
       path: '/admin/produits/nouveau'
       fullPath: '/admin/produits/nouveau'
       preLoaderRoute: typeof AdminProduitsNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/promotions/': {
+      id: '/admin/promotions/'
+      path: '/'
+      fullPath: '/admin/promotions/'
+      preLoaderRoute: typeof AdminPromotionsIndexRouteImport
+      parentRoute: typeof AdminPromotionsRoute
+    }
+    '/admin/promotions/$id': {
+      id: '/admin/promotions/$id'
+      path: '/$id'
+      fullPath: '/admin/promotions/$id'
+      preLoaderRoute: typeof AdminPromotionsIdRouteImport
+      parentRoute: typeof AdminPromotionsRoute
+    }
+    '/admin/promotions/nouvelle': {
+      id: '/admin/promotions/nouvelle'
+      path: '/nouvelle'
+      fullPath: '/admin/promotions/nouvelle'
+      preLoaderRoute: typeof AdminPromotionsNouvelleRouteImport
+      parentRoute: typeof AdminPromotionsRoute
+    }
+    '/admin/reviews/': {
+      id: '/admin/reviews/'
+      path: '/admin/reviews'
+      fullPath: '/admin/reviews/'
+      preLoaderRoute: typeof AdminReviewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compte/commandes/': {
@@ -747,6 +882,22 @@ const AdminInventaireRouteWithChildren = AdminInventaireRoute._addFileChildren(
   AdminInventaireRouteChildren,
 )
 
+interface AdminPromotionsRouteChildren {
+  AdminPromotionsIdRoute: typeof AdminPromotionsIdRoute
+  AdminPromotionsNouvelleRoute: typeof AdminPromotionsNouvelleRoute
+  AdminPromotionsIndexRoute: typeof AdminPromotionsIndexRoute
+}
+
+const AdminPromotionsRouteChildren: AdminPromotionsRouteChildren = {
+  AdminPromotionsIdRoute: AdminPromotionsIdRoute,
+  AdminPromotionsNouvelleRoute: AdminPromotionsNouvelleRoute,
+  AdminPromotionsIndexRoute: AdminPromotionsIndexRoute,
+}
+
+const AdminPromotionsRouteWithChildren = AdminPromotionsRoute._addFileChildren(
+  AdminPromotionsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
@@ -764,7 +915,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCommandesRoute: AdminCommandesRoute,
   AdminInventaireRoute: AdminInventaireRouteWithChildren,
   AdminParametresRoute: AdminParametresRoute,
-  AdminPromotionsRoute: AdminPromotionsRoute,
+  AdminPromotionsRoute: AdminPromotionsRouteWithChildren,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
   CommandeConfirmeeIdRoute: CommandeConfirmeeIdRoute,
@@ -776,11 +927,15 @@ const rootRouteChildren: RootRouteChildren = {
   CompteIndexRoute: CompteIndexRoute,
   AdminCategoriesIdRoute: AdminCategoriesIdRoute,
   AdminCategoriesNouvelleRoute: AdminCategoriesNouvelleRoute,
+  AdminCouponsIdRoute: AdminCouponsIdRoute,
+  AdminCouponsNouveauRoute: AdminCouponsNouveauRoute,
   AdminProduitsIdRoute: AdminProduitsIdRoute,
   AdminProduitsNouveauRoute: AdminProduitsNouveauRoute,
   CompteCommandesIdRoute: CompteCommandesIdRoute,
   AdminCategoriesIndexRoute: AdminCategoriesIndexRoute,
+  AdminCouponsIndexRoute: AdminCouponsIndexRoute,
   AdminProduitsIndexRoute: AdminProduitsIndexRoute,
+  AdminReviewsIndexRoute: AdminReviewsIndexRoute,
   CompteCommandesIndexRoute: CompteCommandesIndexRoute,
 }
 export const routeTree = rootRouteImport

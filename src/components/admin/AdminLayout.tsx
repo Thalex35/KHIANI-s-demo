@@ -7,7 +7,9 @@ import {
   Settings,
   ShoppingCart,
   Tag,
+  Ticket,
   Users,
+  MessageCircle,
   FolderOpen,
   Warehouse,
   ArrowLeft,
@@ -22,9 +24,11 @@ const LINKS = [
   { to: "/admin/categories", label: "Catégories", icon: FolderOpen },
   { to: "/admin/inventaire", label: "Inventaire", icon: Warehouse },
   { to: "/admin/commandes", label: "Commandes", icon: ShoppingCart },
+  { to: "/admin/promotions", label: "Promotions", icon: Tag },
+  { to: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { to: "/admin/reviews", label: "Avis", icon: MessageCircle },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { to: "/admin/statistiques", label: "Statistiques", icon: BarChart3 },
-  { to: "/admin/promotions", label: "Promotions", icon: Tag },
   { to: "/admin/parametres", label: "Paramètres", icon: Settings },
 ] as const;
 
