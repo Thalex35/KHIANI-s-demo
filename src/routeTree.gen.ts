@@ -25,6 +25,8 @@ import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitiali
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCommandesRouteImport } from './routes/admin.commandes'
 import { Route as AdminInventaireRouteImport } from './routes/admin.inventaire'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminNewsletterRouteImport } from './routes/admin.newsletter'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
@@ -130,6 +132,16 @@ const AdminCommandesRoute = AdminCommandesRouteImport.update({
 const AdminInventaireRoute = AdminInventaireRouteImport.update({
   id: '/admin/inventaire',
   path: '/admin/inventaire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/admin/messages',
+  path: '/admin/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
+  id: '/admin/newsletter',
+  path: '/admin/newsletter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminParametresRoute = AdminParametresRouteImport.update({
@@ -280,6 +292,8 @@ export interface FileRoutesByFullPath {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRouteWithChildren
   '/admin/statistiques': typeof AdminStatistiquesRoute
@@ -324,6 +338,8 @@ export interface FileRoutesByTo {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -368,6 +384,8 @@ export interface FileRoutesById {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/inventaire': typeof AdminInventaireRouteWithChildren
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRouteWithChildren
   '/admin/statistiques': typeof AdminStatistiquesRoute
@@ -414,6 +432,8 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/inventaire'
+    | '/admin/messages'
+    | '/admin/newsletter'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
@@ -458,6 +478,8 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/inventaire'
+    | '/admin/messages'
+    | '/admin/newsletter'
     | '/admin/parametres'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
@@ -501,6 +523,8 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/inventaire'
+    | '/admin/messages'
+    | '/admin/newsletter'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
@@ -546,6 +570,8 @@ export interface RootRouteChildren {
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   AdminCommandesRoute: typeof AdminCommandesRoute
   AdminInventaireRoute: typeof AdminInventaireRouteWithChildren
+  AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminPromotionsRoute: typeof AdminPromotionsRouteWithChildren
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
@@ -683,6 +709,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/inventaire'
       fullPath: '/admin/inventaire'
       preLoaderRoute: typeof AdminInventaireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/admin/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/newsletter': {
+      id: '/admin/newsletter'
+      path: '/admin/newsletter'
+      fullPath: '/admin/newsletter'
+      preLoaderRoute: typeof AdminNewsletterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/parametres': {
@@ -914,6 +954,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   AdminCommandesRoute: AdminCommandesRoute,
   AdminInventaireRoute: AdminInventaireRouteWithChildren,
+  AdminMessagesRoute: AdminMessagesRoute,
+  AdminNewsletterRoute: AdminNewsletterRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminPromotionsRoute: AdminPromotionsRouteWithChildren,
   AdminStatistiquesRoute: AdminStatistiquesRoute,

@@ -224,55 +224,38 @@ function CheckoutPage() {
       return;
     }
 
-    const orderNumber = `MN-${Date.now().toString().slice(-8)}`;
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        order_number: orderNumber,
-        status: "en_attente",
-        payment_status: "reussi",
-        delivery_option: delivery,
-        estimated_delivery:
-          selectedDelivery.id === "express"
-            ? "1 à 2 jours ouvrés"
-            : selectedDelivery.id === "pickup"
-              ? "Sous 24 heures"
-              : "2 à 5 jours ouvrés",
-        subtotal,
-        discount: discount + Math.abs(couponDiscount),
-        shipping,
-        total: grandTotal,
-        payment_method: payment,
-        ...form,
-      })
-      .select("id, order_number")
-      .single();
+    const { data: orderRows, error: secureOrderError } = await supabase.rpc(
+      "create_order_secure",
+      {
+        p_user_id: user.id,
+        p_full_name: form.full_name,
+        p_phone: form.phone,
+        p_address: form.address,
+        p_city: form.city,
+        p_country: form.country,
+        p_notes: form.notes,
+        p_delivery_option: delivery,
+        p_payment_method: payment,
+        p_discount: discount + Math.abs(couponDiscount),
+        p_shipping: shipping,
+        p_subtotal: subtotal,
+        p_total: grandTotal,
+        p_items: items.map((item) => ({
+          product_id: item.productId,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+        })),
+      },
+    );
 
-    if (orderError || !order) {
+    if (secureOrderError || !orderRows || !Array.isArray(orderRows) || orderRows.length === 0) {
       setSubmitting(false);
       setError("La commande n'a pas pu être enregistrée. Veuillez réessayer.");
       return;
     }
 
-    const { error: itemsError } = await supabase.from("order_items").insert(
-      items.map((item) => ({
-        order_id: order.id,
-        product_id: item.productId,
-        name: item.name,
-        image_url: item.image,
-        size: item.size,
-        color: item.color,
-        unit_price: item.unitPrice,
-        quantity: item.quantity,
-      })),
-    );
-
-    if (itemsError) {
-      setSubmitting(false);
-      setError("Les articles de la commande n'ont pas pu être enregistrés.");
-      return;
-    }
+    const order = orderRows[0] as { id: string; order_number: string };
 
     // Increment coupon usage count if coupon was applied
     if (couponApplied && couponCode) {
@@ -292,17 +275,6 @@ function CheckoutPage() {
           });
       }
     }
-
-    await Promise.all(
-      items.map((item) =>
-        supabase.rpc("decrement_variant_stock", {
-          _product_id: item.productId,
-          _size: item.size,
-          _color: item.color,
-          _qty: item.quantity,
-        }),
-      ),
-    );
 
     clear();
     await queryClient.invalidateQueries();
