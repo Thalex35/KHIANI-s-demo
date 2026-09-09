@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { Check, CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
@@ -20,34 +21,48 @@ export const Route = createFileRoute("/commander")({
   head: () => ({
     meta: [
       { title: "Finaliser ma commande — MAISON NOVA" },
-      {
-        name: "description",
-        content: "Renseignez vos informations de livraison et validez votre commande MAISON NOVA.",
-      },
-      { property: "og:title", content: "Finaliser ma commande — MAISON NOVA" },
-      { property: "og:description", content: "Livraison et paiement en quelques étapes." },
+      { name: "description", content: "Finalisez votre commande en quatre étapes." },
     ],
   }),
   component: CheckoutPage,
 });
 
-const schema = z.object({
+const customerSchema = z.object({
   full_name: z.string().trim().min(2, { message: "Nom complet requis" }).max(120),
   phone: z.string().trim().min(6, { message: "Téléphone requis" }).max(30),
+});
+
+const deliverySchema = z.object({
   address: z.string().trim().min(5, { message: "Adresse requise" }).max(200),
   city: z.string().trim().min(2, { message: "Ville requise" }).max(80),
   country: z.string().trim().min(2, { message: "Pays requis" }).max(80),
-  notes: z.string().trim().max(500).optional(),
+  notes: z.string().trim().max(500),
 });
+
+type CheckoutForm = {
+  full_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  notes: string;
+};
+
+const DELIVERY_OPTIONS = [
+  { id: "standard", label: "Livraison standard", detail: "2 à 5 jours ouvrés", fee: 5.9 },
+  { id: "express", label: "Livraison express", detail: "1 à 2 jours ouvrés", fee: 12.9 },
+  { id: "pickup", label: "Retrait en boutique", detail: "Disponible sous 24 h", fee: 0 },
+] as const;
+
+const STEP_LABELS = ["Coordonnées", "Livraison", "Paiement", "Vérification"];
 
 function CheckoutPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, profile, loading } = useAuth();
   const { items, subtotal, discount, total, clear } = useCart();
-  const shipping = total >= 80 || total === 0 ? 0 : 5.9;
-
-  const [form, setForm] = useState({
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState<CheckoutForm>({
     full_name: "",
     phone: "",
     address: "",
@@ -55,9 +70,16 @@ function CheckoutPage() {
     country: "France",
     notes: "",
   });
-  const [payment, setPayment] = useState(PAYMENT_METHODS[0]!.id);
+  const [payment, setPayment] = useState("demo");
+  const [delivery, setDelivery] = useState("standard");
+  const [simulateFailure, setSimulateFailure] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const selectedDelivery =
+    DELIVERY_OPTIONS.find((option) => option.id === delivery) ?? DELIVERY_OPTIONS[0];
+  const shipping = total >= 80 && delivery === "standard" ? 0 : selectedDelivery.fee;
+  const grandTotal = total + shipping;
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/connexion" });
@@ -65,32 +87,57 @@ function CheckoutPage() {
 
   useEffect(() => {
     if (!profile) return;
-    setForm((f) => ({
-      ...f,
-      full_name: f.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
-      phone: f.phone || profile.phone || "",
-      address: f.address || profile.address || "",
-      city: f.city || profile.city || "",
-      country: profile.country || f.country,
+    setForm((current) => ({
+      ...current,
+      full_name:
+        current.full_name || `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+      phone: current.phone || profile.phone || "",
+      address: current.address || profile.address || "",
+      city: current.city || profile.city || "",
+      country: profile.country || current.country,
     }));
   }, [profile]);
 
   const set =
-    (key: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setForm((f) => ({ ...f, [key]: e.target.value }));
+    (key: keyof CheckoutForm) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((current) => ({ ...current, [key]: event.target.value }));
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Formulaire invalide");
-      return;
+  const validateStep = () => {
+    const result = step === 1 ? customerSchema.safeParse(form) : deliverySchema.safeParse(form);
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Veuillez vérifier les informations");
+      return false;
     }
+    setError(null);
+    return true;
+  };
+
+  const next = () => {
+    if (step <= 2 && !validateStep()) return;
+    setStep((current) => Math.min(4, current + 1));
+  };
+
+  const previous = () => {
+    setError(null);
+    setStep((current) => Math.max(1, current - 1));
+  };
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!user || items.length === 0) return;
+    if (!validateStep()) return;
 
     setSubmitting(true);
+    setError(null);
+    await new Promise((resolve) => window.setTimeout(resolve, 700));
+
+    if (simulateFailure) {
+      setSubmitting(false);
+      setError("Le paiement de démonstration a échoué. Désactivez le test d'échec puis réessayez.");
+      return;
+    }
+
     const orderNumber = `MN-${Date.now().toString().slice(-8)}`;
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -98,12 +145,20 @@ function CheckoutPage() {
         user_id: user.id,
         order_number: orderNumber,
         status: "en_attente",
+        payment_status: "reussi",
+        delivery_option: delivery,
+        estimated_delivery:
+          selectedDelivery.id === "express"
+            ? "1 à 2 jours ouvrés"
+            : selectedDelivery.id === "pickup"
+              ? "Sous 24 heures"
+              : "2 à 5 jours ouvrés",
         subtotal,
         discount,
         shipping,
-        total: total + shipping,
+        total: grandTotal,
         payment_method: payment,
-        ...parsed.data,
+        ...form,
       })
       .select("id, order_number")
       .single();
@@ -115,15 +170,15 @@ function CheckoutPage() {
     }
 
     const { error: itemsError } = await supabase.from("order_items").insert(
-      items.map((i) => ({
+      items.map((item) => ({
         order_id: order.id,
-        product_id: i.productId,
-        name: i.name,
-        image_url: i.image,
-        size: i.size,
-        color: i.color,
-        unit_price: i.unitPrice,
-        quantity: i.quantity,
+        product_id: item.productId,
+        name: item.name,
+        image_url: item.image,
+        size: item.size,
+        color: item.color,
+        unit_price: item.unitPrice,
+        quantity: item.quantity,
       })),
     );
 
@@ -134,12 +189,12 @@ function CheckoutPage() {
     }
 
     await Promise.all(
-      items.map((i) =>
+      items.map((item) =>
         supabase.rpc("decrement_variant_stock", {
-          _product_id: i.productId,
-          _size: i.size,
-          _color: i.color,
-          _qty: i.quantity,
+          _product_id: item.productId,
+          _size: item.size,
+          _color: item.color,
+          _qty: item.quantity,
         }),
       ),
     );
@@ -147,8 +202,8 @@ function CheckoutPage() {
     clear();
     await queryClient.invalidateQueries();
     setSubmitting(false);
-    toast.success(`Commande ${order.order_number} confirmée !`);
-    void navigate({ to: "/compte/commandes" });
+    toast.success("Paiement de démonstration réussi");
+    void navigate({ to: "/commande-confirmee/$id", params: { id: order.id } });
   };
 
   if (items.length === 0) {
@@ -178,78 +233,247 @@ function CheckoutPage() {
         description="Paiement de démonstration : aucune transaction réelle n'est effectuée."
       />
       <div className="container-page py-10">
-        <form onSubmit={submit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-8">
-            <section className="surface-card p-5 sm:p-6">
-              <h2 className="text-xl">Informations de livraison</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <Label htmlFor="full_name">Nom complet</Label>
-                  <Input id="full_name" value={form.full_name} onChange={set("full_name")} className="mt-1.5" required />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input id="phone" value={form.phone} onChange={set("phone")} className="mt-1.5" required />
-                </div>
-                <div>
-                  <Label htmlFor="city">Ville</Label>
-                  <Input id="city" value={form.city} onChange={set("city")} className="mt-1.5" required />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="address">Adresse</Label>
-                  <Input id="address" value={form.address} onChange={set("address")} className="mt-1.5" required />
-                </div>
-                <div>
-                  <Label htmlFor="country">Pays</Label>
-                  <Input id="country" value={form.country} onChange={set("country")} className="mt-1.5" required />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="notes">Instructions de livraison (facultatif)</Label>
-                  <Textarea id="notes" value={form.notes} onChange={set("notes")} className="mt-1.5" rows={3} />
-                </div>
+        <div className="mb-8 grid grid-cols-4 gap-2">
+          {STEP_LABELS.map((label, index) => {
+            const number = index + 1;
+            return (
+              <div
+                key={label}
+                className={`border-t-2 pt-2 text-xs ${number <= step ? "border-accent text-foreground" : "border-border text-muted-foreground"}`}
+              >
+                <span className="font-semibold">0{number}</span> {label}
               </div>
-            </section>
+            );
+          })}
+        </div>
 
-            <section className="surface-card p-5 sm:p-6">
-              <h2 className="text-xl">Mode de paiement</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Mode démonstration : la commande est enregistrée sans débit réel.
-              </p>
-              <RadioGroup value={payment} onValueChange={setPayment} className="mt-4 grid gap-3 sm:grid-cols-2">
-                {PAYMENT_METHODS.map((method) => (
-                  <Label
-                    key={method.id}
-                    htmlFor={method.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 hover:border-foreground has-[:checked]:border-accent"
-                  >
-                    <RadioGroupItem id={method.id} value={method.id} />
-                    <span className="text-sm">{method.label}</span>
-                  </Label>
-                ))}
-              </RadioGroup>
-            </section>
+        <form onSubmit={submit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
+            {step === 1 && (
+              <section className="surface-card p-5 sm:p-6">
+                <div className="flex items-center gap-2">
+                  <MapPin className="size-5 text-accent" />
+                  <h2 className="text-xl">Vos coordonnées</h2>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ces informations seront associées à la commande.
+                </p>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="full_name">Nom complet</Label>
+                    <Input
+                      id="full_name"
+                      value={form.full_name}
+                      onChange={set("full_name")}
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input id="email" value={user?.email ?? ""} className="mt-1.5" disabled />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={form.phone}
+                      onChange={set("phone")}
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                </div>
+              </section>
+            )}
 
-            <section className="surface-card p-5 sm:p-6">
-              <h2 className="text-xl">Récapitulatif des articles</h2>
-              <ul className="mt-4 space-y-3">
-                {items.map((i) => (
-                  <li key={`${i.productId}-${i.size}-${i.color}`} className="flex items-center gap-3">
-                    <img src={i.image} alt={i.name} loading="lazy" className="size-14 rounded object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{i.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {i.size} · {i.color} · ×{i.quantity}
-                      </p>
-                    </div>
-                    <span className="text-sm">{formatPrice(i.unitPrice * i.quantity)}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            {step === 2 && (
+              <section className="surface-card p-5 sm:p-6">
+                <div className="flex items-center gap-2">
+                  <Truck className="size-5 text-accent" />
+                  <h2 className="text-xl">Livraison</h2>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="address">Adresse</Label>
+                    <Input
+                      id="address"
+                      value={form.address}
+                      onChange={set("address")}
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Ville</Label>
+                    <Input
+                      id="city"
+                      value={form.city}
+                      onChange={set("city")}
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="country">Pays</Label>
+                    <Input
+                      id="country"
+                      value={form.country}
+                      onChange={set("country")}
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="notes">Instructions de livraison</Label>
+                    <Textarea
+                      id="notes"
+                      value={form.notes}
+                      onChange={set("notes")}
+                      className="mt-1.5"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <RadioGroup value={delivery} onValueChange={setDelivery} className="mt-6 space-y-3">
+                  {DELIVERY_OPTIONS.map((option) => (
+                    <Label
+                      key={option.id}
+                      htmlFor={`delivery-${option.id}`}
+                      className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent"
+                    >
+                      <span className="flex items-center gap-3">
+                        <RadioGroupItem id={`delivery-${option.id}`} value={option.id} />
+                        <span>
+                          <span className="block text-sm font-medium">{option.label}</span>
+                          <span className="text-xs text-muted-foreground">{option.detail}</span>
+                        </span>
+                      </span>
+                      <span className="text-sm">
+                        {option.fee === 0 || (option.id === "standard" && total >= 80)
+                          ? "Offerte"
+                          : formatPrice(option.fee)}
+                      </span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </section>
+            )}
+
+            {step === 3 && (
+              <section className="surface-card p-5 sm:p-6">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="size-5 text-accent" />
+                  <h2 className="text-xl">Paiement</h2>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Simulation uniquement : aucun débit réel ne sera effectué.
+                </p>
+                <RadioGroup
+                  value={payment}
+                  onValueChange={setPayment}
+                  className="mt-5 grid gap-3 sm:grid-cols-2"
+                >
+                  {[
+                    ...PAYMENT_METHODS,
+                    { id: "cash", label: "Paiement à la livraison", hint: "Simulation" },
+                  ].map((method) => (
+                    <Label
+                      key={method.id}
+                      htmlFor={`payment-${method.id}`}
+                      className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent"
+                    >
+                      <RadioGroupItem id={`payment-${method.id}`} value={method.id} />
+                      <span>
+                        <span className="block text-sm">{method.label}</span>
+                        <span className="text-xs text-muted-foreground">{method.hint}</span>
+                      </span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+                <label className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={simulateFailure}
+                    onChange={(event) => setSimulateFailure(event.target.checked)}
+                    className="size-4 accent-[var(--color-accent)]"
+                  />{" "}
+                  Simuler un échec de paiement
+                </label>
+              </section>
+            )}
+
+            {step === 4 && (
+              <section className="surface-card p-5 sm:p-6">
+                <div className="flex items-center gap-2">
+                  <PackageCheck className="size-5 text-accent" />
+                  <h2 className="text-xl">Vérifier la commande</h2>
+                </div>
+                <dl className="mt-5 space-y-3 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Client</dt>
+                    <dd>{form.full_name}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Livraison</dt>
+                    <dd className="text-right">
+                      {selectedDelivery.label}
+                      <br />
+                      {form.city}, {form.country}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Paiement</dt>
+                    <dd>
+                      {
+                        [...PAYMENT_METHODS, { id: "cash", label: "Paiement à la livraison" }].find(
+                          (method) => method.id === payment,
+                        )?.label
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <Separator className="my-5" />
+                <ul className="space-y-3">
+                  {items.map((item) => (
+                    <li
+                      key={`${item.productId}-${item.size}-${item.color}`}
+                      className="flex items-center gap-3"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="size-14 rounded object-cover"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm">
+                        {item.name} · {item.size} / {item.color} × {item.quantity}
+                      </span>
+                      <span className="text-sm">{formatPrice(item.unitPrice * item.quantity)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <div className="flex flex-wrap justify-between gap-3">
+              <Button type="button" variant="outline" onClick={previous} disabled={step === 1}>
+                Retour
+              </Button>
+              {step < 4 ? (
+                <Button type="button" onClick={next}>
+                  Continuer
+                </Button>
+              ) : (
+                <Button type="submit" disabled={submitting}>
+                  <Check className="mr-2 size-4" />
+                  {submitting ? "Paiement en cours…" : "Payer et confirmer"}
+                </Button>
+              )}
+            </div>
           </div>
 
           <aside className="surface-card h-fit p-5 lg:sticky lg:top-24">
-            <h2 className="text-xl">Total</h2>
+            <h2 className="text-xl">Résumé</h2>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Sous-total</dt>
@@ -268,16 +492,9 @@ function CheckoutPage() {
             </dl>
             <Separator className="my-4" />
             <div className="flex items-baseline justify-between">
-              <span className="font-medium">À payer</span>
-              <span className="text-xl font-semibold">{formatPrice(total + shipping)}</span>
+              <span className="font-medium">Total</span>
+              <span className="text-xl font-semibold">{formatPrice(grandTotal)}</span>
             </div>
-            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-            <Button type="submit" size="lg" className="mt-5 w-full" disabled={submitting}>
-              {submitting ? "Validation en cours…" : "Confirmer la commande"}
-            </Button>
-            <Button asChild variant="outline" className="mt-2 w-full">
-              <Link to="/panier">Retour au panier</Link>
-            </Button>
           </aside>
         </form>
       </div>

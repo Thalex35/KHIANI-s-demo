@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { EmptyState } from "@/components/site/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/shop";
-import { itemKey, useCart } from "@/hooks/useCart";
+import { itemKey, type CartItem, useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/panier")({
@@ -14,7 +15,8 @@ export const Route = createFileRoute("/panier")({
       { title: "Mon panier — MAISON NOVA" },
       {
         name: "description",
-        content: "Vérifiez vos articles, ajustez les quantités et passez commande en toute sécurité.",
+        content:
+          "Vérifiez vos articles, ajustez les quantités et passez commande en toute sécurité.",
       },
       { property: "og:title", content: "Mon panier — MAISON NOVA" },
       { property: "og:description", content: "Vérifiez vos articles et passez commande." },
@@ -24,9 +26,34 @@ export const Route = createFileRoute("/panier")({
 });
 
 function CartPage() {
-  const { items, subtotal, discount, total, updateQuantity, removeItem } = useCart();
+  const { items, subtotal, discount, total, addItem, updateQuantity, removeItem } = useCart();
   const { user } = useAuth();
+  const [saved, setSaved] = useState<CartItem[]>([]);
   const shipping = total >= 80 || total === 0 ? 0 : 5.9;
+
+  useEffect(() => {
+    try {
+      setSaved(
+        JSON.parse(localStorage.getItem("maison-nova-panier-sauvegarde") ?? "[]") as CartItem[],
+      );
+    } catch {
+      setSaved([]);
+    }
+  }, []);
+
+  const saveForLater = (item: CartItem) => {
+    const next = [...saved.filter((entry) => itemKey(entry) !== itemKey(item)), item];
+    setSaved(next);
+    localStorage.setItem("maison-nova-panier-sauvegarde", JSON.stringify(next));
+    removeItem(itemKey(item));
+  };
+
+  const moveToCart = (item: CartItem) => {
+    addItem(item);
+    const next = saved.filter((entry) => itemKey(entry) !== itemKey(item));
+    setSaved(next);
+    localStorage.setItem("maison-nova-panier-sauvegarde", JSON.stringify(next));
+  };
 
   return (
     <SiteLayout>
@@ -112,11 +139,49 @@ function CartPage() {
                           )}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => saveForLater(item)}
+                        className="mt-2 self-start text-xs text-muted-foreground hover:text-accent hover:underline"
+                      >
+                        Sauvegarder pour plus tard
+                      </button>
                     </div>
                   </li>
                 );
               })}
             </ul>
+
+            {saved.length > 0 && (
+              <section className="surface-card p-4">
+                <h2 className="text-lg">Sauvegardés pour plus tard</h2>
+                <ul className="mt-3 space-y-3">
+                  {saved.map((item) => (
+                    <li key={itemKey(item)} className="flex items-center gap-3">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="size-14 rounded object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.size} · {item.color}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => moveToCart(item)}
+                      >
+                        Ajouter au panier
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <aside className="surface-card h-fit p-5 lg:sticky lg:top-24">
               <h2 className="text-xl">Résumé</h2>
