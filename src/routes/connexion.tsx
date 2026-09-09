@@ -54,11 +54,6 @@ function LoginPage() {
     void navigate({ to: "/compte" });
   };
 
-  const fill = (mail: string, pass: string) => {
-    setEmail(mail);
-    setPassword(pass);
-  };
-
   return (
     <SiteLayout>
       <div className="container-page flex justify-center py-12 sm:py-16">
@@ -114,27 +109,6 @@ function LoginPage() {
                 Mot de passe oublié ?
               </Link>
             </p>
-          </div>
-
-          <div className="surface-card mt-4 p-4 text-sm">
-            <p className="eyebrow text-muted-foreground">Comptes de démonstration</p>
-            <div className="mt-3 space-y-2">
-              <button
-                type="button"
-                onClick={() => fill("demo.user@example.com", "DemoUser123!")}
-                className="w-full rounded-md border border-border px-3 py-2 text-left hover:border-foreground"
-              >
-                <span className="font-medium">Client</span> — demo.user@example.com / DemoUser123!
-              </button>
-              <button
-                type="button"
-                onClick={() => fill("demo.admin@example.com", "DemoAdmin123!")}
-                className="w-full rounded-md border border-border px-3 py-2 text-left hover:border-foreground"
-              >
-                <span className="font-medium">Administrateur</span> — demo.admin@example.com /
-                DemoAdmin123!
-              </button>
-            </div>
           </div>
         </div>
       </div>

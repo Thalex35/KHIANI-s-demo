@@ -8,7 +8,6 @@ import {
   Layers,
   LogOut,
   Mail,
-  Menu,
   Search,
   ShoppingBag,
   Sparkles,
@@ -75,7 +74,9 @@ export function Header() {
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden rounded-full border border-border/70" aria-label="Ouvrir le menu">
-                  <Menu className="size-5" />
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
+                    <path d="M4 7h16M4 12h16M4 17h16" className="stroke-current" strokeWidth="1.7" strokeLinecap="round" />
+                  </svg>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[86vw] max-w-sm p-0">
@@ -260,15 +261,6 @@ export function Header() {
               );
             })}
           </nav>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden rounded-full"
-            aria-label="Ouvrir le menu"
-            onClick={() => setOpen(true)}
-          >
-            <Menu className="size-5" />
-          </Button>
         </div>
       </div>
     </header>
