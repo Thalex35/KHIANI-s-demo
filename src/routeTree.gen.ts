@@ -28,6 +28,7 @@ import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as CommandeConfirmeeIdRouteImport } from './routes/commande-confirmee.$id'
 import { Route as CompteIndexRouteImport } from './routes/compte.index'
 import { Route as CompteAdressesRouteImport } from './routes/compte.adresses'
 import { Route as CompteFavorisRouteImport } from './routes/compte.favoris'
@@ -134,6 +135,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   path: '/admin/utilisateurs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommandeConfirmeeIdRoute = CommandeConfirmeeIdRouteImport.update({
+  id: '/commande-confirmee/$id',
+  path: '/commande-confirmee/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompteIndexRoute = CompteIndexRouteImport.update({
   id: '/compte/',
   path: '/compte/',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
   '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
   '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/commande-confirmee/$id': typeof CommandeConfirmeeIdRoute
   '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/commande-confirmee/$id'
     | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/commande-confirmee/$id'
     | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/commande-confirmee/$id'
     | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
@@ -394,6 +406,7 @@ export interface RootRouteChildren {
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
+  CommandeConfirmeeIdRoute: typeof CommandeConfirmeeIdRoute
   CompteAdressesRoute: typeof CompteAdressesRoute
   CompteFavorisRoute: typeof CompteFavorisRoute
   CompteProfilRoute: typeof CompteProfilRoute
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/commande-confirmee/$id': {
+      id: '/commande-confirmee/$id'
+      path: '/commande-confirmee/$id'
+      fullPath: '/commande-confirmee/$id'
+      preLoaderRoute: typeof CommandeConfirmeeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/compte/': {
       id: '/compte/'
       path: '/compte'
@@ -634,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
+  CommandeConfirmeeIdRoute: CommandeConfirmeeIdRoute,
   CompteAdressesRoute: CompteAdressesRoute,
   CompteFavorisRoute: CompteFavorisRoute,
   CompteProfilRoute: CompteProfilRoute,

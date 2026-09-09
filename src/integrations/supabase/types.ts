@@ -139,6 +139,9 @@ export type Database = {
           notes: string | null;
           order_number: string;
           payment_method: string;
+          payment_status: string;
+          delivery_option: string;
+          estimated_delivery: string | null;
           phone: string | null;
           shipping: number;
           status: Database["public"]["Enums"]["order_status"];
@@ -158,6 +161,9 @@ export type Database = {
           notes?: string | null;
           order_number?: string;
           payment_method?: string;
+          payment_status?: string;
+          delivery_option?: string;
+          estimated_delivery?: string | null;
           phone?: string | null;
           shipping?: number;
           status?: Database["public"]["Enums"]["order_status"];
@@ -177,6 +183,9 @@ export type Database = {
           notes?: string | null;
           order_number?: string;
           payment_method?: string;
+          payment_status?: string;
+          delivery_option?: string;
+          estimated_delivery?: string | null;
           phone?: string | null;
           shipping?: number;
           status?: Database["public"]["Enums"]["order_status"];
