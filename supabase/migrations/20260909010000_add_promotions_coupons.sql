@@ -20,9 +20,13 @@ ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "promotions_read_all" ON public.promotions FOR SELECT
   TO anon, authenticated USING (true);
-CREATE POLICY "promotions_admin" ON public.promotions FOR INSERT, UPDATE, DELETE
+CREATE POLICY "promotions_insert_admin" ON public.promotions FOR INSERT
+  TO authenticated WITH CHECK (public.has_role(auth.uid(),'admin'));
+CREATE POLICY "promotions_update_admin" ON public.promotions FOR UPDATE
   TO authenticated USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
+CREATE POLICY "promotions_delete_admin" ON public.promotions FOR DELETE
+  TO authenticated USING (public.has_role(auth.uid(),'admin'));
 
 CREATE TRIGGER promotions_touch
   BEFORE UPDATE ON public.promotions
@@ -55,9 +59,13 @@ ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "coupons_read_active" ON public.coupons FOR SELECT
   TO anon, authenticated USING (is_active = true AND (expiration_date IS NULL OR expiration_date > now()));
-CREATE POLICY "coupons_admin" ON public.coupons FOR INSERT, UPDATE, DELETE
+CREATE POLICY "coupons_insert_admin" ON public.coupons FOR INSERT
+  TO authenticated WITH CHECK (public.has_role(auth.uid(),'admin'));
+CREATE POLICY "coupons_update_admin" ON public.coupons FOR UPDATE
   TO authenticated USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
+CREATE POLICY "coupons_delete_admin" ON public.coupons FOR DELETE
+  TO authenticated USING (public.has_role(auth.uid(),'admin'));
 
 CREATE TRIGGER coupons_touch
   BEFORE UPDATE ON public.coupons
