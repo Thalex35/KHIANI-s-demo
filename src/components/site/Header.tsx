@@ -105,8 +105,8 @@ export function Header() {
                           to={item.to}
                           search={item.search}
                           onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 border-b border-border py-3 text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
-                          activeProps={{ className: "text-accent font-semibold" }}
+                          className="dual-layer-nav-link mobile-nav-link flex items-center gap-3 border-b border-border py-3 text-sm font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
+                          activeProps={{ className: "dual-layer-nav-link dual-layer-nav-active text-accent font-semibold" }}
                         >
                           <Icon className="size-4" />
                           <span>{item.label}</span>
@@ -252,7 +252,7 @@ export function Header() {
                   to={item.to}
                   search={item.search}
                   className="dual-layer-nav-link flex items-center gap-2 text-[0.72rem] font-medium uppercase tracking-[0.16em] text-muted-foreground transition-all duration-300 hover:text-foreground"
-                  activeProps={{ className: "text-foreground font-semibold" }}
+                  activeProps={{ className: "dual-layer-nav-link dual-layer-nav-active text-foreground font-semibold" }}
                   activeOptions={{ exact: item.to === "/" }}
                 >
                   <Icon className="size-4" />
