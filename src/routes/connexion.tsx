@@ -106,6 +106,14 @@ function LoginPage() {
                 Créer un compte
               </Link>
             </p>
+            <p className="mt-2 text-center text-sm">
+              <Link
+                to="/mot-de-passe-oublie"
+                className="text-muted-foreground hover:text-accent hover:underline"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </p>
           </div>
 
           <div className="surface-card mt-4 p-4 text-sm">
