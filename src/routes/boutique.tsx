@@ -26,11 +26,12 @@ type Search = {
   type?: string;
   size?: string;
   color?: string;
+  brand?: string;
   min?: number;
   max?: number;
   stock?: "en_stock" | "rupture";
   promo?: boolean;
-  sort?: "nouveautes" | "populaires" | "prix_asc" | "prix_desc";
+  sort?: "featured" | "nouveautes" | "populaires" | "best_selling" | "prix_asc" | "prix_desc";
 };
 
 export const Route = createFileRoute("/boutique")({
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/boutique")({
     type: typeof search["type"] === "string" ? search["type"] : undefined,
     size: typeof search["size"] === "string" ? search["size"] : undefined,
     color: typeof search["color"] === "string" ? search["color"] : undefined,
+    brand: typeof search["brand"] === "string" ? search["brand"] : undefined,
     min: search["min"] != null ? Number(search["min"]) : undefined,
     max: search["max"] != null ? Number(search["max"]) : undefined,
     stock:
@@ -47,7 +49,14 @@ export const Route = createFileRoute("/boutique")({
         ? (search["stock"] as Search["stock"])
         : undefined,
     promo: search["promo"] === true || search["promo"] === "true" ? true : undefined,
-    sort: ["nouveautes", "populaires", "prix_asc", "prix_desc"].includes(String(search["sort"]))
+    sort: [
+      "featured",
+      "nouveautes",
+      "populaires",
+      "best_selling",
+      "prix_asc",
+      "prix_desc",
+    ].includes(String(search["sort"]))
       ? (search["sort"] as Search["sort"])
       : undefined,
   }),
@@ -94,6 +103,7 @@ function BoutiquePage() {
       return false;
     if (search.category && p.category !== search.category) return false;
     if (search.type && p.subcategory !== search.type) return false;
+    if (search.brand && p.brand !== search.brand) return false;
     if (search.size && !p.sizes.includes(search.size)) return false;
     if (search.color && !p.colors.includes(search.color)) return false;
     const price = effectivePrice(p);
@@ -110,6 +120,12 @@ function BoutiquePage() {
     switch (search.sort) {
       case "populaires":
         return popularityScore(b) - popularityScore(a);
+      case "best_selling":
+        return b.purchases - a.purchases;
+      case "featured":
+        return (
+          Number(b.is_featured) - Number(a.is_featured) || popularityScore(b) - popularityScore(a)
+        );
       case "prix_asc":
         return effectivePrice(a) - effectivePrice(b);
       case "prix_desc":
@@ -145,6 +161,12 @@ function BoutiquePage() {
         options={[...TYPES]}
         value={search.type}
         onChange={(v) => setSearch({ type: v })}
+      />
+      <FilterGroup
+        title="Marque"
+        options={[...new Set((products ?? []).map((p) => p.brand))]}
+        value={search.brand}
+        onChange={(v) => setSearch({ brand: v })}
       />
 
       <div>
@@ -195,7 +217,9 @@ function BoutiquePage() {
             placeholder="Min"
             aria-label="Prix minimum"
             value={search.min ?? ""}
-            onChange={(e) => setSearch({ min: e.target.value ? Number(e.target.value) : undefined })}
+            onChange={(e) =>
+              setSearch({ min: e.target.value ? Number(e.target.value) : undefined })
+            }
           />
           <span className="text-muted-foreground">—</span>
           <Input
@@ -204,7 +228,9 @@ function BoutiquePage() {
             placeholder="Max"
             aria-label="Prix maximum"
             value={search.max ?? ""}
-            onChange={(e) => setSearch({ max: e.target.value ? Number(e.target.value) : undefined })}
+            onChange={(e) =>
+              setSearch({ max: e.target.value ? Number(e.target.value) : undefined })
+            }
           />
         </div>
       </div>
@@ -273,21 +299,44 @@ function BoutiquePage() {
                 </SheetContent>
               </Sheet>
               <Select
-                value={search.sort ?? "nouveautes"}
+                value={search.sort ?? "featured"}
                 onValueChange={(v) => setSearch({ sort: v as Search["sort"] })}
               >
                 <SelectTrigger className="w-[170px]" aria-label="Trier les produits">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="featured">En vedette</SelectItem>
                   <SelectItem value="nouveautes">Nouveautés</SelectItem>
                   <SelectItem value="populaires">Plus populaires</SelectItem>
+                  <SelectItem value="best_selling">Meilleures ventes</SelectItem>
                   <SelectItem value="prix_asc">Prix croissant</SelectItem>
                   <SelectItem value="prix_desc">Prix décroissant</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {activeCount > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">Filtres actifs :</span>
+              {Object.entries(search).map(([key, value]) =>
+                value === undefined ? null : (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSearch({ [key]: undefined })}
+                    className="rounded-full border border-border px-3 py-1 text-xs hover:border-foreground"
+                  >
+                    {key === "q" ? `Recherche : ${value}` : String(value)} ×
+                  </button>
+                ),
+              )}
+              <button type="button" onClick={reset} className="text-xs text-accent hover:underline">
+                Tout effacer
+              </button>
+            </div>
+          )}
 
           <div className="mt-6">
             {isError ? (

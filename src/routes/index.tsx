@@ -54,6 +54,7 @@ function HomePage() {
   const populaires = [...(products ?? [])]
     .sort((a, b) => popularityScore(b) - popularityScore(a))
     .slice(0, 4);
+  const featured = (products ?? []).filter((p) => p.is_featured).slice(0, 4);
   const promos = (products ?? []).filter((p) => p.sale_price != null).slice(0, 4);
 
   return (
@@ -149,6 +150,32 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Collection en vedette */}
+      {featured.length > 0 && (
+        <section className="bg-background py-14">
+          <div className="container-page">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow text-accent">Sélection MAISON NOVA</p>
+                <h2 className="mt-1 text-2xl sm:text-3xl">La collection en vedette</h2>
+              </div>
+              <Link
+                to="/boutique"
+                search={{ sort: "featured" }}
+                className="text-sm hover:text-accent"
+              >
+                Tout voir
+              </Link>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
+              {featured.map((p) => (
+                <ProductCard key={p.id} product={p} stock={stocks.get(p.id)} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Nouveautés */}
       <section className="container-page py-6">
         <div className="flex items-end justify-between gap-4">
@@ -156,7 +183,11 @@ function HomePage() {
             <p className="eyebrow text-accent">Fraîchement arrivés</p>
             <h2 className="mt-1 text-2xl sm:text-3xl">Nouveautés</h2>
           </div>
-          <Link to="/boutique" search={{ sort: "nouveautes" }} className="text-sm hover:text-accent">
+          <Link
+            to="/boutique"
+            search={{ sort: "nouveautes" }}
+            className="text-sm hover:text-accent"
+          >
             Tout voir
           </Link>
         </div>
@@ -180,7 +211,11 @@ function HomePage() {
             <p className="eyebrow text-accent">Les préférés</p>
             <h2 className="mt-1 text-2xl sm:text-3xl">Produits populaires</h2>
           </div>
-          <Link to="/boutique" search={{ sort: "populaires" }} className="text-sm hover:text-accent">
+          <Link
+            to="/boutique"
+            search={{ sort: "populaires" }}
+            className="text-sm hover:text-accent"
+          >
             Tout voir
           </Link>
         </div>
