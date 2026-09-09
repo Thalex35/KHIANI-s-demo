@@ -13,6 +13,8 @@ import {
   FolderOpen,
   Warehouse,
   ArrowLeft,
+  Mail,
+  Newspaper,
 } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +29,8 @@ const LINKS = [
   { to: "/admin/promotions", label: "Promotions", icon: Tag },
   { to: "/admin/coupons", label: "Coupons", icon: Ticket },
   { to: "/admin/reviews", label: "Avis", icon: MessageCircle },
+  { to: "/admin/messages", label: "Messages", icon: Mail },
+  { to: "/admin/newsletter", label: "Newsletter", icon: Newspaper },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { to: "/admin/statistiques", label: "Statistiques", icon: BarChart3 },
   { to: "/admin/parametres", label: "Paramètres", icon: Settings },

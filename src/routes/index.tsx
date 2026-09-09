@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Leaf, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ProductCard, ProductGridSkeleton } from "@/components/shop/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -257,14 +258,28 @@ function HomePage() {
           </p>
           <form
             className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
                 toast.error("Veuillez saisir une adresse e-mail valide");
                 return;
               }
-              setEmail("");
-              toast.success("Merci ! Votre inscription à la newsletter est confirmée.");
+
+              try {
+                const { error } = await supabase
+                  .from("newsletter_subscribers")
+                  .upsert({ email, status: "active", subscribed_at: new Date().toISOString() }, {
+                    onConflict: "email",
+                  });
+
+                if (error) throw error;
+
+                setEmail("");
+                toast.success("Merci ! Votre inscription à la newsletter est confirmée.");
+              } catch (err) {
+                console.error(err);
+                toast.error("L'inscription à la newsletter a échoué.");
+              }
             }}
           >
             <Input

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -48,7 +49,7 @@ function ContactPage() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const parsed = schema.safeParse(form);
@@ -56,12 +57,33 @@ function ContactPage() {
       setError(parsed.error.issues[0]?.message ?? "Formulaire invalide");
       return;
     }
+
     setSending(true);
-    window.setTimeout(() => {
-      setSending(false);
+
+    try {
+      const payload = {
+        name: form.name,
+        email: form.email,
+        phone: null,
+        subject: form.subject,
+        message: form.message,
+        status: "new",
+      };
+
+      const { error } = await supabase.from("contact_messages").insert(payload);
+      if (error) {
+        throw error;
+      }
+
       setForm({ name: "", email: "", subject: "", message: "" });
       toast.success("Message envoyé ! Nous vous répondons sous 24 h.");
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      setError("Impossible d'envoyer le message pour le moment. Réessayez plus tard.");
+      toast.error("Échec de l'envoi du message.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
