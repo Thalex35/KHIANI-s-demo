@@ -1,0 +1,80 @@
+import { useEffect, type ReactNode } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  BarChart3,
+  LayoutDashboard,
+  Package,
+  Settings,
+  ShoppingCart,
+  Tag,
+  Users,
+} from "lucide-react";
+import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
+import { useAuth } from "@/hooks/useAuth";
+
+const LINKS = [
+  { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/admin/produits", label: "Produits", icon: Package },
+  { to: "/admin/commandes", label: "Commandes", icon: ShoppingCart },
+  { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
+  { to: "/admin/statistiques", label: "Statistiques", icon: BarChart3 },
+  { to: "/admin/promotions", label: "Promotions", icon: Tag },
+  { to: "/admin/parametres", label: "Paramètres", icon: Settings },
+] as const;
+
+export function AdminLayout({
+  title,
+  description,
+  actions,
+  children,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  const { user, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) void navigate({ to: "/connexion" });
+    else if (!isAdmin) void navigate({ to: "/" });
+  }, [loading, user, isAdmin, navigate]);
+
+  if (loading || !user || !isAdmin) {
+    return (
+      <SiteLayout>
+        <div className="container-page py-20">
+          <div className="mx-auto h-6 w-48 animate-pulse rounded bg-muted" />
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  return (
+    <SiteLayout>
+      <PageHeader eyebrow="Administration" title={title} description={description} />
+      <div className="container-page grid gap-8 py-8 lg:grid-cols-[220px_1fr]">
+        <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+          {LINKS.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              activeOptions={{ exact: to === "/admin" }}
+              activeProps={{ className: "bg-primary text-primary-foreground border-primary" }}
+              className="flex shrink-0 items-center gap-2 rounded-md border border-border px-3 py-2.5 text-sm transition hover:border-foreground"
+            >
+              <Icon className="size-4" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="min-w-0">
+          {actions && <div className="mb-5 flex flex-wrap gap-2">{actions}</div>}
+          {children}
+        </div>
+      </div>
+    </SiteLayout>
+  );
+}

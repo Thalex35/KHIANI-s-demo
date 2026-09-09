@@ -1,0 +1,186 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — MAISON NOVA
+ * Palette sable / encre / terracotta, typographie éditoriale.
+ * Toutes les couleurs sont en oklch et exposées comme tokens sémantiques.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-sand: var(--sand);
+  --color-ink: var(--ink);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 60 / 0.04), 0 12px 32px oklch(0.2 0.02 60 / 0.07);
+  --shadow-lift: 0 8px 40px oklch(0.2 0.02 60 / 0.14);
+}
+
+:root {
+  --radius: 0.25rem;
+  --background: oklch(0.985 0.006 85);
+  --foreground: oklch(0.19 0.012 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0.012 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.19 0.012 60);
+  --primary: oklch(0.22 0.014 60);
+  --primary-foreground: oklch(0.985 0.006 85);
+  --secondary: oklch(0.945 0.014 82);
+  --secondary-foreground: oklch(0.24 0.014 60);
+  --muted: oklch(0.955 0.01 84);
+  --muted-foreground: oklch(0.52 0.017 66);
+  --accent: oklch(0.6 0.13 42);
+  --accent-foreground: oklch(0.99 0.005 85);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0.005 85);
+  --success: oklch(0.55 0.12 155);
+  --success-foreground: oklch(0.99 0.005 85);
+  --sand: oklch(0.93 0.022 82);
+  --ink: oklch(0.19 0.012 60);
+  --border: oklch(0.9 0.012 80);
+  --input: oklch(0.9 0.012 80);
+  --ring: oklch(0.6 0.13 42);
+  --chart-1: oklch(0.6 0.13 42);
+  --chart-2: oklch(0.45 0.06 200);
+  --chart-3: oklch(0.55 0.12 155);
+  --chart-4: oklch(0.72 0.14 85);
+  --chart-5: oklch(0.35 0.04 60);
+  --sidebar: oklch(0.975 0.008 85);
+  --sidebar-foreground: oklch(0.19 0.012 60);
+  --sidebar-primary: oklch(0.22 0.014 60);
+  --sidebar-primary-foreground: oklch(0.985 0.006 85);
+  --sidebar-accent: oklch(0.94 0.014 82);
+  --sidebar-accent-foreground: oklch(0.22 0.014 60);
+  --sidebar-border: oklch(0.9 0.012 80);
+  --sidebar-ring: oklch(0.6 0.13 42);
+}
+
+.dark {
+  --background: oklch(0.17 0.008 60);
+  --foreground: oklch(0.96 0.006 85);
+  --card: oklch(0.21 0.01 60);
+  --card-foreground: oklch(0.96 0.006 85);
+  --popover: oklch(0.21 0.01 60);
+  --popover-foreground: oklch(0.96 0.006 85);
+  --primary: oklch(0.94 0.01 85);
+  --primary-foreground: oklch(0.2 0.012 60);
+  --secondary: oklch(0.27 0.012 60);
+  --secondary-foreground: oklch(0.96 0.006 85);
+  --muted: oklch(0.27 0.012 60);
+  --muted-foreground: oklch(0.72 0.012 70);
+  --accent: oklch(0.65 0.13 42);
+  --accent-foreground: oklch(0.15 0.01 60);
+  --destructive: oklch(0.63 0.19 27);
+  --destructive-foreground: oklch(0.98 0.005 85);
+  --success: oklch(0.65 0.13 155);
+  --success-foreground: oklch(0.15 0.01 60);
+  --sand: oklch(0.3 0.014 70);
+  --ink: oklch(0.96 0.006 85);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.65 0.13 42);
+  --sidebar: oklch(0.21 0.01 60);
+  --sidebar-foreground: oklch(0.96 0.006 85);
+  --sidebar-primary: oklch(0.65 0.13 42);
+  --sidebar-primary-foreground: oklch(0.15 0.01 60);
+  --sidebar-accent: oklch(0.27 0.012 60);
+  --sidebar-accent-foreground: oklch(0.96 0.006 85);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.65 0.13 42);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 82rem;
+  padding-inline: 1rem;
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+@utility surface-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
