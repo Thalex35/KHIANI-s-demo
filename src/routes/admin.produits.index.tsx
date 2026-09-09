@@ -19,6 +19,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { productsQuery, stockByProduct, variantsQuery } from "@/lib/catalog";
 import { discountPercent, effectivePrice, formatPrice, type Product } from "@/lib/shop";
 import { useCatalogRealtime } from "@/hooks/useCatalogRealtime";
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/admin/produits/")({
 function AdminProducts() {
   useCatalogRealtime();
   const queryClient = useQueryClient();
+  const { isTester } = useAuth();
   const { data: products = [], isLoading } = useQuery(productsQuery(true));
   const { data: variants = [] } = useQuery(variantsQuery());
   const stock = stockByProduct(variants);
@@ -55,26 +58,51 @@ function AdminProducts() {
   );
 
   const toggleActive = async (product: Product, value: boolean) => {
-    const { error } = await supabase
-      .from("products")
-      .update({ is_active: value })
-      .eq("id", product.id);
-    if (error) {
-      toast.error("La mise à jour a échoué");
+    const payload = { is_active: value, id: product.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "products",
+      "update",
+      payload,
+      `${value ? "Activation" : "Masquage"} du produit ${product.name}`,
+      async () => {
+        const { error } = await supabase.from("products").update({ is_active: value }).eq("id", product.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success(value ? "Produit publié (simulation TEST MODE)" : "Produit masqué (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["products"] });
     toast.success(value ? "Produit publié" : "Produit masqué de la boutique");
   };
 
   const remove = async () => {
     if (!toDelete) return;
-    const { error } = await supabase.from("products").delete().eq("id", toDelete.id);
+    const payload = { id: toDelete.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "products",
+      "delete",
+      payload,
+      `Suppression du produit ${toDelete.name}`,
+      async () => {
+        const { error } = await supabase.from("products").delete().eq("id", toDelete.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
     setToDelete(null);
-    if (error) {
-      toast.error("La suppression a échoué");
+    if (result === undefined && isTester) {
+      toast.success("Produit supprimé (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["products"] });
     toast.success("Produit supprimé");
   };

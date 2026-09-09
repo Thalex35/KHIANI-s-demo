@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { formatDate } from "@/lib/shop";
 
 type ProductReview = {
@@ -72,6 +74,7 @@ export const Route = createFileRoute("/admin/reviews/")({
 
 function AdminReviews() {
   const queryClient = useQueryClient();
+  const { isTester } = useAuth();
   const { data: reviews = [], isLoading } = useQuery(reviewsQuery());
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "hidden">("all");
@@ -91,55 +94,99 @@ function AdminReviews() {
   );
 
   const approve = async (review: ProductReview) => {
-    const { error } = await supabase
-      .from("product_reviews")
-      .update({ is_approved: true, is_hidden: false })
-      .eq("id", review.id);
-    if (error) {
-      toast.error("Échec de l'approbation");
+    const payload = { id: review.id, is_approved: true, is_hidden: false };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "product_reviews",
+      "update",
+      payload,
+      `Approbation de l'avis ${review.id}`,
+      async () => {
+        const { error } = await supabase.from("product_reviews").update({ is_approved: true, is_hidden: false }).eq("id", review.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success("Avis approuvé (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     toast.success("Avis approuvé");
   };
 
   const hide = async (review: ProductReview) => {
-    const { error } = await supabase
-      .from("product_reviews")
-      .update({ is_hidden: true })
-      .eq("id", review.id);
-    if (error) {
-      toast.error("Échec du masquage");
+    const payload = { id: review.id, is_hidden: true };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "product_reviews",
+      "update",
+      payload,
+      `Masquage de l'avis ${review.id}`,
+      async () => {
+        const { error } = await supabase.from("product_reviews").update({ is_hidden: true }).eq("id", review.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success("Avis masqué (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     toast.success("Avis masqué");
   };
 
   const unhide = async (review: ProductReview) => {
-    const { error } = await supabase
-      .from("product_reviews")
-      .update({ is_hidden: false })
-      .eq("id", review.id);
-    if (error) {
-      toast.error("Échec du démasquage");
+    const payload = { id: review.id, is_hidden: false };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "product_reviews",
+      "update",
+      payload,
+      `Démasquage de l'avis ${review.id}`,
+      async () => {
+        const { error } = await supabase.from("product_reviews").update({ is_hidden: false }).eq("id", review.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success("Avis démasqué (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     toast.success("Avis démasqué");
   };
 
   const remove = async () => {
     if (!toDelete) return;
-    const { error } = await supabase
-      .from("product_reviews")
-      .delete()
-      .eq("id", toDelete.id);
+    const payload = { id: toDelete.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "product_reviews",
+      "delete",
+      payload,
+      `Suppression de l'avis ${toDelete.id}`,
+      async () => {
+        const { error } = await supabase.from("product_reviews").delete().eq("id", toDelete.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
     setToDelete(null);
-    if (error) {
-      toast.error("Échec de la suppression");
+    if (result === undefined && isTester) {
+      toast.success("Avis supprimé (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
     toast.success("Avis supprimé");
   };

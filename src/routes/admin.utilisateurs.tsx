@@ -46,8 +46,11 @@ function AdminUsers() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<AdminProfile | null>(null);
 
-  const roleOf = (id: string) =>
-    roles.find((r) => r.user_id === id && r.role === "admin") ? "Administrateur" : "Client";
+  const roleOf = (id: string) => {
+    if (roles.find((r) => r.user_id === id && r.role === "admin")) return "Administrateur";
+    if (roles.find((r) => r.user_id === id && r.role === "tester")) return "Testeur";
+    return "Client";
+  };
   const ordersOf = (id: string) => orders.filter((o) => o.user_id === id);
   const favoritesOf = (id: string) => favorites.filter((f) => f.user_id === id).length;
   const isActive = (p: AdminProfile) =>

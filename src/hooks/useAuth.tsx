@@ -15,11 +15,16 @@ export type Profile = {
   last_seen_at: string;
 };
 
+export type AppRole = "user" | "tester" | "admin";
+
 type AuthContextValue = {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  role: AppRole | null;
   isAdmin: boolean;
+  isTester: boolean;
+  canAccessAdmin: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -30,21 +35,36 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<AppRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTester, setIsTester] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (userId: string | undefined) => {
     if (!userId) {
       setProfile(null);
+      setRole(null);
       setIsAdmin(false);
+      setIsTester(false);
       return;
     }
     const [{ data: prof }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
+
+    const detectedRole = roles?.find((r: { role: string }) => r.role === "admin")
+      ? "admin"
+      : roles?.find((r: { role: string }) => r.role === "tester")
+        ? "tester"
+        : roles?.find((r: { role: string }) => r.role === "user")
+          ? "user"
+          : null;
+
     setProfile((prof as Profile | null) ?? null);
-    setIsAdmin(Boolean(roles?.some((r: { role: string }) => r.role === "admin")));
+    setRole(detectedRole);
+    setIsAdmin(detectedRole === "admin");
+    setIsTester(detectedRole === "tester");
   };
 
   useEffect(() => {
@@ -82,13 +102,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     session,
     profile,
+    role,
     isAdmin,
+    isTester,
+    canAccessAdmin: isAdmin || isTester,
     loading,
     refreshProfile: () => loadUserData(session?.user.id),
     signOut: async () => {
       await supabase.auth.signOut();
       setProfile(null);
+      setRole(null);
       setIsAdmin(false);
+      setIsTester(false);
     },
   };
 

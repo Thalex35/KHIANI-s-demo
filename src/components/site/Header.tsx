@@ -52,7 +52,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
   const navigate = useNavigate();
-  const { user, isAdmin, profile, signOut } = useAuth();
+  const { user, isAdmin, isTester, canAccessAdmin, profile, signOut } = useAuth();
   const { count } = useCart();
 
   const submitSearch = (e: React.FormEvent) => {
@@ -123,9 +123,9 @@ export function Header() {
                         <Button asChild variant="outline" onClick={() => setOpen(false)}>
                           <Link to="/compte/favoris">Mes favoris</Link>
                         </Button>
-                        {isAdmin && (
+                        {canAccessAdmin && (
                           <Button asChild variant="outline" onClick={() => setOpen(false)}>
-                            <Link to="/admin">Espace administrateur</Link>
+                            <Link to="/admin">{isTester ? "Espace testeur" : "Espace administrateur"}</Link>
                           </Button>
                         )}
                         <Button variant="ghost" onClick={handleSignOut}>
@@ -204,12 +204,12 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/compte/profil">Mes informations</Link>
                   </DropdownMenuItem>
-                  {isAdmin && (
+                  {canAccessAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/admin">
-                          <LayoutDashboard className="mr-2 size-4" /> Administration
+                          <LayoutDashboard className="mr-2 size-4" /> {isTester ? "Administration testeur" : "Administration"}
                         </Link>
                       </DropdownMenuItem>
                     </>

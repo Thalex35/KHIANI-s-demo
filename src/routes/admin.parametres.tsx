@@ -12,6 +12,7 @@ import { adminOrdersQuery, adminProfilesQuery, storeSettingsQuery } from "@/lib/
 import { CURRENCY_OPTIONS, PAYMENT_METHODS, formatCurrencyAmount } from "@/lib/shop";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/parametres")({
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/admin/parametres")({
 });
 
 function AdminSettings() {
-  const { profile } = useAuth();
+  const { profile, isTester } = useAuth();
   const queryClient = useQueryClient();
   const { data: products = [] } = useQuery(productsQuery(true));
   const { data: orders = [] } = useQuery(adminOrdersQuery());
@@ -116,6 +117,20 @@ function AdminSettings() {
 
       for (const [key, value] of Object.entries(rows)) {
         const existing = settings.find((item) => item.key === key);
+        if (isTester) {
+          runTesterSafeWrite(
+            true,
+            "store_settings",
+            existing ? "update" : "create",
+            { key, value, existingId: existing?.id ?? null },
+            `Sauvegarde simulation TEST MODE pour ${key}`,
+            async () => {
+              return true;
+            },
+          );
+          continue;
+        }
+
         if (existing) {
           const { error } = await supabase.from("store_settings").update({ value, updated_at: new Date().toISOString() }).eq("id", existing.id);
           if (error) throw error;
@@ -128,7 +143,7 @@ function AdminSettings() {
         window.localStorage.setItem("shop_currency", draft.shop_currency);
       }
       await queryClient.invalidateQueries({ queryKey: ["store", "settings"] });
-      toast.success("Paramètres sauvegardés");
+      toast.success(isTester ? "Paramètres simulés en TEST MODE" : "Paramètres sauvegardés");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Échec de la sauvegarde");
     } finally {
