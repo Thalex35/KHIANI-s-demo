@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, LogOut, Package, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { Heart, LogOut, MapPin, Package, User as UserIcon, LayoutDashboard } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ const LINKS = [
   { to: "/compte", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/compte/commandes", label: "Mes commandes", icon: Package },
   { to: "/compte/favoris", label: "Mes favoris", icon: Heart },
+  { to: "/compte/adresses", label: "Mes adresses", icon: MapPin },
   { to: "/compte/profil", label: "Mes informations", icon: UserIcon },
 ] as const;
 

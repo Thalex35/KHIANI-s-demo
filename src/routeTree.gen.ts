@@ -19,7 +19,9 @@ import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as InscriptionRouteImport } from './routes/inscription'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as PanierRouteImport } from './routes/panier'
+import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCommandesRouteImport } from './routes/admin.commandes'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
@@ -27,6 +29,7 @@ import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as CompteIndexRouteImport } from './routes/compte.index'
+import { Route as CompteAdressesRouteImport } from './routes/compte.adresses'
 import { Route as CompteFavorisRouteImport } from './routes/compte.favoris'
 import { Route as CompteProfilRouteImport } from './routes/compte.profil'
 import { Route as ProduitSlugRouteImport } from './routes/produit.$slug'
@@ -86,9 +89,19 @@ const InscriptionRoute = InscriptionRouteImport.update({
   path: '/inscription',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PanierRoute = PanierRouteImport.update({
   id: '/panier',
   path: '/panier',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
+  id: '/reinitialiser-mot-de-passe',
+  path: '/reinitialiser-mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -124,6 +137,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
 const CompteIndexRoute = CompteIndexRouteImport.update({
   id: '/compte/',
   path: '/compte/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompteAdressesRoute = CompteAdressesRouteImport.update({
+  id: '/compte/adresses',
+  path: '/compte/adresses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompteFavorisRoute = CompteFavorisRouteImport.update({
@@ -178,12 +196,15 @@ export interface FileRoutesByFullPath {
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
   '/produit/$slug': typeof ProduitSlugRoute
@@ -206,12 +227,15 @@ export interface FileRoutesByTo {
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
   '/produit/$slug': typeof ProduitSlugRoute
@@ -235,12 +259,15 @@ export interface FileRoutesById {
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/inscription': typeof InscriptionRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/compte/adresses': typeof CompteAdressesRoute
   '/compte/favoris': typeof CompteFavorisRoute
   '/compte/profil': typeof CompteProfilRoute
   '/produit/$slug': typeof ProduitSlugRoute
@@ -265,12 +292,15 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/contact'
     | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/panier'
+    | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
     | '/produit/$slug'
@@ -293,12 +323,15 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/contact'
     | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/panier'
+    | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
     | '/produit/$slug'
@@ -321,12 +354,15 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/contact'
     | '/inscription'
+    | '/mot-de-passe-oublie'
     | '/panier'
+    | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/compte/adresses'
     | '/compte/favoris'
     | '/compte/profil'
     | '/produit/$slug'
@@ -350,12 +386,15 @@ export interface RootRouteChildren {
   ConnexionRoute: typeof ConnexionRoute
   ContactRoute: typeof ContactRoute
   InscriptionRoute: typeof InscriptionRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PanierRoute: typeof PanierRoute
+  ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   AdminCommandesRoute: typeof AdminCommandesRoute
   AdminParametresRoute: typeof AdminParametresRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
+  CompteAdressesRoute: typeof CompteAdressesRoute
   CompteFavorisRoute: typeof CompteFavorisRoute
   CompteProfilRoute: typeof CompteProfilRoute
   ProduitSlugRoute: typeof ProduitSlugRoute
@@ -440,11 +479,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/panier': {
       id: '/panier'
       path: '/panier'
       fullPath: '/panier'
       preLoaderRoute: typeof PanierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reinitialiser-mot-de-passe': {
+      id: '/reinitialiser-mot-de-passe'
+      path: '/reinitialiser-mot-de-passe'
+      fullPath: '/reinitialiser-mot-de-passe'
+      preLoaderRoute: typeof ReinitialiserMotDePasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -494,6 +547,13 @@ declare module '@tanstack/react-router' {
       path: '/compte'
       fullPath: '/compte/'
       preLoaderRoute: typeof CompteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compte/adresses': {
+      id: '/compte/adresses'
+      path: '/compte/adresses'
+      fullPath: '/compte/adresses'
+      preLoaderRoute: typeof CompteAdressesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compte/favoris': {
@@ -566,12 +626,15 @@ const rootRouteChildren: RootRouteChildren = {
   ConnexionRoute: ConnexionRoute,
   ContactRoute: ContactRoute,
   InscriptionRoute: InscriptionRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
   PanierRoute: PanierRoute,
+  ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   AdminCommandesRoute: AdminCommandesRoute,
   AdminParametresRoute: AdminParametresRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
+  CompteAdressesRoute: CompteAdressesRoute,
   CompteFavorisRoute: CompteFavorisRoute,
   CompteProfilRoute: CompteProfilRoute,
   ProduitSlugRoute: ProduitSlugRoute,
