@@ -18,6 +18,9 @@ const NAV = [
   { to: "/", label: "Accueil" },
   { to: "/boutique", label: "Boutique" },
   { to: "/categories", label: "Catégories" },
+  { to: "/boutique", label: "Nouveautés", search: { sort: "nouveautes" } },
+  { to: "/boutique", label: "Meilleures ventes", search: { sort: "best_selling" } },
+  { to: "/boutique", label: "Promotions", search: { promo: true } },
   { to: "/a-propos", label: "À propos" },
   { to: "/contact", label: "Contact" },
 ] as const;
@@ -69,8 +72,9 @@ export function Header() {
               <nav className="flex flex-col">
                 {NAV.map((item) => (
                   <Link
-                    key={item.to}
+                    key={item.label}
                     to={item.to}
+                    search={item.search}
                     onClick={() => setOpen(false)}
                     className="border-b border-border py-3 text-base"
                     activeProps={{ className: "text-accent font-semibold" }}
@@ -119,8 +123,9 @@ export function Header() {
         <nav className="ml-8 hidden items-center gap-7 lg:flex">
           {NAV.map((item) => (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
+              search={item.search}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               activeProps={{ className: "text-foreground font-semibold" }}
               activeOptions={{ exact: item.to === "/" }}
