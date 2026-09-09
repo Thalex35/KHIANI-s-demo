@@ -24,6 +24,7 @@ import { Route as PanierRouteImport } from './routes/panier'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCommandesRouteImport } from './routes/admin.commandes'
+import { Route as AdminInventaireRouteImport } from './routes/admin.inventaire'
 import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
@@ -34,6 +35,10 @@ import { Route as CompteAdressesRouteImport } from './routes/compte.adresses'
 import { Route as CompteFavorisRouteImport } from './routes/compte.favoris'
 import { Route as CompteProfilRouteImport } from './routes/compte.profil'
 import { Route as ProduitSlugRouteImport } from './routes/produit.$slug'
+import { Route as AdminCategoriesIndexRouteImport } from './routes/admin.categories.index'
+import { Route as AdminCategoriesIdRouteImport } from './routes/admin.categories.$id'
+import { Route as AdminCategoriesNouvelleRouteImport } from './routes/admin.categories.nouvelle'
+import { Route as AdminInventaireHistoriqueRouteImport } from './routes/admin.inventaire.historique'
 import { Route as AdminProduitsIndexRouteImport } from './routes/admin.produits.index'
 import { Route as AdminProduitsIdRouteImport } from './routes/admin.produits.$id'
 import { Route as AdminProduitsNouveauRouteImport } from './routes/admin.produits.nouveau'
@@ -115,6 +120,11 @@ const AdminCommandesRoute = AdminCommandesRouteImport.update({
   path: '/admin/commandes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminInventaireRoute = AdminInventaireRouteImport.update({
+  id: '/admin/inventaire',
+  path: '/admin/inventaire',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminParametresRoute = AdminParametresRouteImport.update({
   id: '/admin/parametres',
   path: '/admin/parametres',
@@ -165,6 +175,27 @@ const ProduitSlugRoute = ProduitSlugRouteImport.update({
   path: '/produit/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCategoriesIndexRoute = AdminCategoriesIndexRouteImport.update({
+  id: '/admin/categories/',
+  path: '/admin/categories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCategoriesIdRoute = AdminCategoriesIdRouteImport.update({
+  id: '/admin/categories/$id',
+  path: '/admin/categories/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCategoriesNouvelleRoute = AdminCategoriesNouvelleRouteImport.update({
+  id: '/admin/categories/nouvelle',
+  path: '/admin/categories/nouvelle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInventaireHistoriqueRoute =
+  AdminInventaireHistoriqueRouteImport.update({
+    id: '/historique',
+    path: '/historique',
+    getParentRoute: () => AdminInventaireRoute,
+  } as any)
 const AdminProduitsIndexRoute = AdminProduitsIndexRouteImport.update({
   id: '/admin/produits/',
   path: '/admin/produits/',
@@ -206,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/panier': typeof PanierRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
+  '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
@@ -217,9 +249,13 @@ export interface FileRoutesByFullPath {
   '/produit/$slug': typeof ProduitSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/compte/': typeof CompteIndexRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
+  '/admin/categories/': typeof AdminCategoriesIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
   '/compte/commandes/': typeof CompteCommandesIndexRoute
 }
@@ -238,6 +274,7 @@ export interface FileRoutesByTo {
   '/panier': typeof PanierRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
+  '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
@@ -249,9 +286,13 @@ export interface FileRoutesByTo {
   '/produit/$slug': typeof ProduitSlugRoute
   '/admin': typeof AdminIndexRoute
   '/compte': typeof CompteIndexRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
+  '/admin/categories': typeof AdminCategoriesIndexRoute
   '/admin/produits': typeof AdminProduitsIndexRoute
   '/compte/commandes': typeof CompteCommandesIndexRoute
 }
@@ -271,6 +312,7 @@ export interface FileRoutesById {
   '/panier': typeof PanierRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/admin/commandes': typeof AdminCommandesRoute
+  '/admin/inventaire': typeof AdminInventaireRouteWithChildren
   '/admin/parametres': typeof AdminParametresRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
@@ -282,9 +324,13 @@ export interface FileRoutesById {
   '/produit/$slug': typeof ProduitSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/compte/': typeof CompteIndexRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/nouvelle': typeof AdminCategoriesNouvelleRoute
+  '/admin/inventaire/historique': typeof AdminInventaireHistoriqueRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
   '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/compte/commandes/$id': typeof CompteCommandesIdRoute
+  '/admin/categories/': typeof AdminCategoriesIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
   '/compte/commandes/': typeof CompteCommandesIndexRoute
 }
@@ -305,6 +351,7 @@ export interface FileRouteTypes {
     | '/panier'
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
+    | '/admin/inventaire'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
@@ -316,9 +363,13 @@ export interface FileRouteTypes {
     | '/produit/$slug'
     | '/admin/'
     | '/compte/'
+    | '/admin/categories/$id'
+    | '/admin/categories/nouvelle'
+    | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
     | '/compte/commandes/$id'
+    | '/admin/categories/'
     | '/admin/produits/'
     | '/compte/commandes/'
   fileRoutesByTo: FileRoutesByTo
@@ -337,6 +388,7 @@ export interface FileRouteTypes {
     | '/panier'
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
+    | '/admin/inventaire'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
@@ -348,9 +400,13 @@ export interface FileRouteTypes {
     | '/produit/$slug'
     | '/admin'
     | '/compte'
+    | '/admin/categories/$id'
+    | '/admin/categories/nouvelle'
+    | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
     | '/compte/commandes/$id'
+    | '/admin/categories'
     | '/admin/produits'
     | '/compte/commandes'
   id:
@@ -369,6 +425,7 @@ export interface FileRouteTypes {
     | '/panier'
     | '/reinitialiser-mot-de-passe'
     | '/admin/commandes'
+    | '/admin/inventaire'
     | '/admin/parametres'
     | '/admin/promotions'
     | '/admin/statistiques'
@@ -380,9 +437,13 @@ export interface FileRouteTypes {
     | '/produit/$slug'
     | '/admin/'
     | '/compte/'
+    | '/admin/categories/$id'
+    | '/admin/categories/nouvelle'
+    | '/admin/inventaire/historique'
     | '/admin/produits/$id'
     | '/admin/produits/nouveau'
     | '/compte/commandes/$id'
+    | '/admin/categories/'
     | '/admin/produits/'
     | '/compte/commandes/'
   fileRoutesById: FileRoutesById
@@ -402,6 +463,7 @@ export interface RootRouteChildren {
   PanierRoute: typeof PanierRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   AdminCommandesRoute: typeof AdminCommandesRoute
+  AdminInventaireRoute: typeof AdminInventaireRouteWithChildren
   AdminParametresRoute: typeof AdminParametresRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
@@ -413,9 +475,12 @@ export interface RootRouteChildren {
   ProduitSlugRoute: typeof ProduitSlugRoute
   AdminIndexRoute: typeof AdminIndexRoute
   CompteIndexRoute: typeof CompteIndexRoute
+  AdminCategoriesIdRoute: typeof AdminCategoriesIdRoute
+  AdminCategoriesNouvelleRoute: typeof AdminCategoriesNouvelleRoute
   AdminProduitsIdRoute: typeof AdminProduitsIdRoute
   AdminProduitsNouveauRoute: typeof AdminProduitsNouveauRoute
   CompteCommandesIdRoute: typeof CompteCommandesIdRoute
+  AdminCategoriesIndexRoute: typeof AdminCategoriesIndexRoute
   AdminProduitsIndexRoute: typeof AdminProduitsIndexRoute
   CompteCommandesIndexRoute: typeof CompteCommandesIndexRoute
 }
@@ -527,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommandesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/inventaire': {
+      id: '/admin/inventaire'
+      path: '/admin/inventaire'
+      fullPath: '/admin/inventaire'
+      preLoaderRoute: typeof AdminInventaireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/parametres': {
       id: '/admin/parametres'
       path: '/admin/parametres'
@@ -597,6 +669,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProduitSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/categories/': {
+      id: '/admin/categories/'
+      path: '/admin/categories'
+      fullPath: '/admin/categories/'
+      preLoaderRoute: typeof AdminCategoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/categories/$id': {
+      id: '/admin/categories/$id'
+      path: '/admin/categories/$id'
+      fullPath: '/admin/categories/$id'
+      preLoaderRoute: typeof AdminCategoriesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/categories/nouvelle': {
+      id: '/admin/categories/nouvelle'
+      path: '/admin/categories/nouvelle'
+      fullPath: '/admin/categories/nouvelle'
+      preLoaderRoute: typeof AdminCategoriesNouvelleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/inventaire/historique': {
+      id: '/admin/inventaire/historique'
+      path: '/historique'
+      fullPath: '/admin/inventaire/historique'
+      preLoaderRoute: typeof AdminInventaireHistoriqueRouteImport
+      parentRoute: typeof AdminInventaireRoute
+    }
     '/admin/produits/': {
       id: '/admin/produits/'
       path: '/admin/produits'
@@ -635,6 +735,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminInventaireRouteChildren {
+  AdminInventaireHistoriqueRoute: typeof AdminInventaireHistoriqueRoute
+}
+
+const AdminInventaireRouteChildren: AdminInventaireRouteChildren = {
+  AdminInventaireHistoriqueRoute: AdminInventaireHistoriqueRoute,
+}
+
+const AdminInventaireRouteWithChildren = AdminInventaireRoute._addFileChildren(
+  AdminInventaireRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
@@ -650,6 +762,7 @@ const rootRouteChildren: RootRouteChildren = {
   PanierRoute: PanierRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   AdminCommandesRoute: AdminCommandesRoute,
+  AdminInventaireRoute: AdminInventaireRouteWithChildren,
   AdminParametresRoute: AdminParametresRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
@@ -661,9 +774,12 @@ const rootRouteChildren: RootRouteChildren = {
   ProduitSlugRoute: ProduitSlugRoute,
   AdminIndexRoute: AdminIndexRoute,
   CompteIndexRoute: CompteIndexRoute,
+  AdminCategoriesIdRoute: AdminCategoriesIdRoute,
+  AdminCategoriesNouvelleRoute: AdminCategoriesNouvelleRoute,
   AdminProduitsIdRoute: AdminProduitsIdRoute,
   AdminProduitsNouveauRoute: AdminProduitsNouveauRoute,
   CompteCommandesIdRoute: CompteCommandesIdRoute,
+  AdminCategoriesIndexRoute: AdminCategoriesIndexRoute,
   AdminProduitsIndexRoute: AdminProduitsIndexRoute,
   CompteCommandesIndexRoute: CompteCommandesIndexRoute,
 }

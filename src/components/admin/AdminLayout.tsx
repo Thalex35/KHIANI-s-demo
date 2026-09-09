@@ -8,13 +8,19 @@ import {
   ShoppingCart,
   Tag,
   Users,
+  FolderOpen,
+  Warehouse,
+  ArrowLeft,
 } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const LINKS = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/admin/produits", label: "Produits", icon: Package },
+  { to: "/admin/categories", label: "Catégories", icon: FolderOpen },
+  { to: "/admin/inventaire", label: "Inventaire", icon: Warehouse },
   { to: "/admin/commandes", label: "Commandes", icon: ShoppingCart },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { to: "/admin/statistiques", label: "Statistiques", icon: BarChart3 },
@@ -26,11 +32,13 @@ export function AdminLayout({
   title,
   description,
   actions,
+  backTo,
   children,
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
+  backTo?: string;
   children: ReactNode;
 }) {
   const { user, isAdmin, loading } = useAuth();
@@ -54,6 +62,18 @@ export function AdminLayout({
 
   return (
     <SiteLayout>
+      {backTo ? (
+        <div className="border-b border-border">
+          <div className="container-page py-3">
+            <Button asChild variant="ghost" size="sm" className="gap-2">
+              <Link to={backTo}>
+                <ArrowLeft className="size-4" />
+                Retour
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <PageHeader eyebrow="Administration" title={title} description={description} />
       <div className="container-page grid gap-8 py-8 lg:grid-cols-[220px_1fr]">
         <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
