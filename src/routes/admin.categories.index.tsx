@@ -19,6 +19,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { cn } from "@/lib/utils";
 
 type Category = {
@@ -64,6 +66,7 @@ export const Route = createFileRoute("/admin/categories/")({
 function AdminCategories() {
   const queryClient = useQueryClient();
   const { data: categories = [], isLoading } = useQuery(categoriesQuery());
+  const { isTester } = useAuth();
   const [search, setSearch] = useState("");
   const [toDelete, setToDelete] = useState<Category | null>(null);
 
@@ -73,26 +76,51 @@ function AdminCategories() {
   );
 
   const toggleActive = async (category: Category, value: boolean) => {
-    const { error } = await supabase
-      .from("categories")
-      .update({ is_active: value })
-      .eq("id", category.id);
-    if (error) {
-      toast.error("La mise à jour a échoué");
+    const payload = { is_active: value, id: category.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "categories",
+      "update",
+      payload,
+      `${value ? "Activation" : "Masquage"} de catégorie ${category.name}`,
+      async () => {
+        const { error } = await supabase.from("categories").update({ is_active: value }).eq("id", category.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success(value ? "Catégorie publiée (simulation TEST MODE)" : "Catégorie masquée (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["categories"] });
     toast.success(value ? "Catégorie publiée" : "Catégorie masquée");
   };
 
   const remove = async () => {
     if (!toDelete) return;
-    const { error } = await supabase.from("categories").delete().eq("id", toDelete.id);
+    const payload = { id: toDelete.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "categories",
+      "delete",
+      payload,
+      `Suppression de catégorie ${toDelete.name}`,
+      async () => {
+        const { error } = await supabase.from("categories").delete().eq("id", toDelete.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
     setToDelete(null);
-    if (error) {
-      toast.error("La suppression a échoué");
+    if (result === undefined && isTester) {
+      toast.success("Catégorie supprimée (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["categories"] });
     toast.success("Catégorie supprimée");
   };

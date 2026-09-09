@@ -103,7 +103,7 @@ export const adminRolesQuery = () =>
     queryFn: async () => {
       const { data, error } = await supabase.from("user_roles").select("user_id, role");
       if (error) throw error;
-      return (data ?? []) as unknown as { user_id: string; role: "admin" | "user" }[];
+      return (data ?? []) as unknown as { user_id: string; role: "admin" | "tester" | "user" }[];
     },
   });
 

@@ -49,16 +49,16 @@ export function AdminLayout({
   backTo?: string;
   children: ReactNode;
 }) {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, canAccessAdmin, isTester, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (loading) return;
     if (!user) void navigate({ to: "/connexion" });
-    else if (!isAdmin) void navigate({ to: "/" });
-  }, [loading, user, isAdmin, navigate]);
+    else if (!canAccessAdmin) void navigate({ to: "/" });
+  }, [loading, user, canAccessAdmin, navigate]);
 
-  if (loading || !user || !isAdmin) {
+  if (loading || !user || !canAccessAdmin) {
     return (
       <SiteLayout>
         <div className="container-page py-20">
@@ -82,7 +82,7 @@ export function AdminLayout({
           </div>
         </div>
       ) : null}
-      <PageHeader eyebrow="Administration" title={title} description={description} />
+      <PageHeader eyebrow={isTester ? "Administration — TEST MODE" : "Administration"} title={title} description={description} />
       <div className="container-page grid gap-8 py-8 lg:grid-cols-[220px_1fr]">
         <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
           {LINKS.map(({ to, label, icon: Icon }) => (

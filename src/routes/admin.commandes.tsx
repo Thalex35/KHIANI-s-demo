@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { adminOrdersQuery } from "@/lib/admin";
 import {
   ORDER_STATUSES,
@@ -41,6 +43,7 @@ export const Route = createFileRoute("/admin/commandes")({
 
 function AdminOrders() {
   const queryClient = useQueryClient();
+  const { isTester } = useAuth();
   const { data: orders = [], isLoading } = useQuery(adminOrdersQuery());
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("tous");
@@ -54,11 +57,25 @@ function AdminOrders() {
   });
 
   const updateStatus = async (id: string, value: OrderStatus) => {
-    const { error } = await supabase.from("orders").update({ status: value }).eq("id", id);
-    if (error) {
-      toast.error("La mise à jour du statut a échoué");
+    const payload = { id, status: value };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "orders",
+      "update",
+      payload,
+      `Changement du statut de commande ${id} vers ${STATUS_LABELS[value]}`,
+      async () => {
+        const { error } = await supabase.from("orders").update({ status: value }).eq("id", id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success(`Simulation TEST MODE : statut ${STATUS_LABELS[value]}`);
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
     toast.success(`Statut mis à jour : ${STATUS_LABELS[value]}`);
   };

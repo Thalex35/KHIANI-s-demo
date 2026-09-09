@@ -20,6 +20,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { runTesterSafeWrite } from "@/lib/testerSandbox";
 import { formatPrice, formatDate } from "@/lib/shop";
 
 type Coupon = {
@@ -65,6 +67,7 @@ export const Route = createFileRoute("/admin/coupons/")({
 
 function AdminCoupons() {
   const queryClient = useQueryClient();
+  const { isTester } = useAuth();
   const { data: coupons = [], isLoading } = useQuery(couponsQuery());
   const [search, setSearch] = useState("");
   const [toDelete, setToDelete] = useState<Coupon | null>(null);
@@ -74,14 +77,25 @@ function AdminCoupons() {
   );
 
   const toggleActive = async (coupon: Coupon, value: boolean) => {
-    const { error } = await supabase
-      .from("coupons")
-      .update({ is_active: value })
-      .eq("id", coupon.id);
-    if (error) {
-      toast.error("La mise à jour a échoué");
+    const payload = { is_active: value, id: coupon.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "coupons",
+      "update",
+      payload,
+      `${value ? "Activation" : "Désactivation"} du coupon ${coupon.code}`,
+      async () => {
+        const { error } = await supabase.from("coupons").update({ is_active: value }).eq("id", coupon.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
+    if (result === undefined && isTester) {
+      toast.success(value ? "Coupon activé (simulation TEST MODE)" : "Coupon désactivé (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["coupons"] });
     toast.success(value ? "Coupon activé" : "Coupon désactivé");
   };
@@ -93,15 +107,26 @@ function AdminCoupons() {
 
   const remove = async () => {
     if (!toDelete) return;
-    const { error } = await supabase
-      .from("coupons")
-      .delete()
-      .eq("id", toDelete.id);
+    const payload = { id: toDelete.id };
+    const result = await runTesterSafeWrite(
+      isTester,
+      "coupons",
+      "delete",
+      payload,
+      `Suppression du coupon ${toDelete.code}`,
+      async () => {
+        const { error } = await supabase.from("coupons").delete().eq("id", toDelete.id);
+        if (error) throw error;
+        return true;
+      },
+    );
+
     setToDelete(null);
-    if (error) {
-      toast.error("La suppression a échoué");
+    if (result === undefined && isTester) {
+      toast.success("Coupon supprimé (simulation TEST MODE)");
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["coupons"] });
     toast.success("Coupon supprimé");
   };
