@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Heart, Minus, Plus, Ruler, Share2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { EmptyState } from "@/components/site/EmptyState";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { productsQuery, stockByProduct, variantsQuery } from "@/lib/catalog";
@@ -16,6 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCatalogRealtime } from "@/hooks/useCatalogRealtime";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
 export const Route = createFileRoute("/produit/$slug")({
   head: ({ params }) => ({
@@ -45,6 +59,8 @@ function ProductPage() {
 
   const { data: products, isLoading } = useQuery(productsQuery());
   const { data: variants } = useQuery(variantsQuery());
+  const productId = product?.id;
+  const recentlyViewedIds = useRecentlyViewed(productId);
 
   const product = (products ?? []).find((p) => p.slug === slug);
   const productVariants = (variants ?? []).filter((v) => v.product_id === product?.id);
@@ -55,8 +71,10 @@ function ProductPage() {
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    if (product) void supabase.rpc("increment_product_metric", { _product_id: product.id, _metric: "views" });
-  }, [product?.id]);
+    if (productId) {
+      void supabase.rpc("increment_product_metric", { _product_id: productId, _metric: "views" });
+    }
+  }, [productId]);
 
   if (isLoading) {
     return (
@@ -95,6 +113,7 @@ function ProductPage() {
   const promo = discountPercent(product);
   const images = product.images.length ? product.images : [product.cover_url];
   const totalStock = productVariants.reduce((n, v) => n + v.stock, 0);
+  const lowStock = totalStock > 0 && totalStock <= 3;
   const selected = productVariants.find((v) => v.size === size && v.color === color);
   const stockFor = (s: string, c: string) =>
     productVariants.find((v) => v.size === s && v.color === c)?.stock ?? 0;
@@ -105,6 +124,10 @@ function ProductPage() {
 
   const similar = (products ?? [])
     .filter((p) => p.id !== product.id && p.subcategory === product.subcategory)
+    .slice(0, 4);
+  const recentlyViewed = recentlyViewedIds
+    .map((id) => (products ?? []).find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
     .slice(0, 4);
 
   const handleAdd = () => {
@@ -135,6 +158,23 @@ function ProductPage() {
     toast.success("Produit ajouté au panier", {
       action: { label: "Voir le panier", onClick: () => void navigate({ to: "/panier" }) },
     });
+  };
+
+  const handleBuyNow = () => {
+    handleAdd();
+    if (selected && size && color) {
+      void navigate({ to: user ? "/commander" : "/connexion" });
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = { title: product.name, text: product.description, url: window.location.href };
+    if (navigator.share) {
+      await navigator.share(shareData).catch(() => undefined);
+      return;
+    }
+    await navigator.clipboard?.writeText(window.location.href);
+    toast.success("Lien du produit copié");
   };
 
   const onFavorite = () => {
@@ -220,7 +260,11 @@ function ProductPage() {
 
             <p className="mt-2 text-sm">
               {totalStock > 0 ? (
-                <span className="text-success">En stock ({totalStock} pièces)</span>
+                <span className={lowStock ? "text-accent" : "text-success"}>
+                  {lowStock
+                    ? `Plus que ${totalStock} pièce(s) disponibles`
+                    : `En stock (${totalStock} pièces)`}
+                </span>
               ) : (
                 <span className="text-destructive">Rupture de stock</span>
               )}
@@ -259,9 +303,56 @@ function ProductPage() {
 
             {/* Tailles */}
             <div className="mt-6">
-              <p className="eyebrow text-muted-foreground">
-                Taille {size && <span className="text-foreground">— {size}</span>}
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="eyebrow text-muted-foreground">
+                  Taille {size && <span className="text-foreground">— {size}</span>}
+                </p>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" className="h-auto px-0 text-xs">
+                      <Ruler className="mr-1.5 size-3.5" /> Guide des tailles
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Guide des tailles</DialogTitle>
+                      <DialogDescription>
+                        Mesurez votre tour de poitrine et comparez-le au tableau. Si vous êtes entre
+                        deux tailles, choisissez la plus grande.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border text-left">
+                            <th className="p-2 font-medium">Taille</th>
+                            <th className="p-2 font-medium">Poitrine</th>
+                            <th className="p-2 font-medium">Taille</th>
+                            <th className="p-2 font-medium">Hanches</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            ["XS", "80–84 cm", "64–68 cm", "88–92 cm"],
+                            ["S", "85–89 cm", "69–73 cm", "93–97 cm"],
+                            ["M", "90–94 cm", "74–78 cm", "98–102 cm"],
+                            ["L", "95–100 cm", "79–84 cm", "103–108 cm"],
+                            ["XL", "101–106 cm", "85–90 cm", "109–114 cm"],
+                            ["XXL", "107–112 cm", "91–96 cm", "115–120 cm"],
+                          ].map(([label, chest, waist, hips]) => (
+                            <tr key={label} className="border-b border-border last:border-0">
+                              <td className="p-2 font-medium">{label}</td>
+                              <td className="p-2 text-muted-foreground">{chest}</td>
+                              <td className="p-2 text-muted-foreground">{waist}</td>
+                              <td className="p-2 text-muted-foreground">{hips}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {product.sizes.map((s) => {
                   const dispo = sizeAvailable(s);
@@ -276,7 +367,8 @@ function ProductPage() {
                         size === s
                           ? "border-foreground bg-primary text-primary-foreground"
                           : "border-border hover:border-foreground",
-                        !dispo && "cursor-not-allowed text-muted-foreground line-through opacity-50",
+                        !dispo &&
+                          "cursor-not-allowed text-muted-foreground line-through opacity-50",
                       )}
                     >
                       {s}
@@ -309,9 +401,7 @@ function ProductPage() {
                   variant="ghost"
                   size="icon"
                   aria-label="Augmenter la quantité"
-                  onClick={() =>
-                    setQuantity((q) => Math.min(selected?.stock ?? 10, q + 1))
-                  }
+                  onClick={() => setQuantity((q) => Math.min(selected?.stock ?? 10, q + 1))}
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -319,10 +409,29 @@ function ProductPage() {
               <Button className="flex-1 min-w-45" size="lg" onClick={handleAdd}>
                 <ShoppingBag className="mr-2 size-4" /> Ajouter au panier
               </Button>
-              <Button variant="outline" size="lg" onClick={onFavorite} aria-label="Ajouter aux favoris">
-                <Heart className={cn("size-4", isFavorite(product.id) && "fill-accent text-accent")} />
+              <Button variant="secondary" size="lg" onClick={handleBuyNow}>
+                Acheter maintenant
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onFavorite}
+                aria-label="Ajouter aux favoris"
+              >
+                <Heart
+                  className={cn("size-4", isFavorite(product.id) && "fill-accent text-accent")}
+                />
               </Button>
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mt-3 px-0"
+              onClick={() => void handleShare()}
+            >
+              <Share2 className="mr-1.5 size-4" /> Partager ce produit
+            </Button>
 
             <Accordion type="single" collapsible className="mt-8" defaultValue="infos">
               <AccordionItem value="infos">
@@ -338,7 +447,10 @@ function ProductPage() {
                       ["Référence", product.sku],
                     ].map(([label, value]) =>
                       value ? (
-                        <div key={label} className="flex justify-between gap-4 border-b border-border pb-2">
+                        <div
+                          key={label}
+                          className="flex justify-between gap-4 border-b border-border pb-2"
+                        >
                           <dt className="text-muted-foreground">{label}</dt>
                           <dd className="text-right">{value}</dd>
                         </div>
@@ -363,6 +475,21 @@ function ProductPage() {
             <h2 className="text-2xl">Produits similaires</h2>
             <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
               {similar.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  stock={stockByProduct(variants ?? []).get(p.id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {recentlyViewed.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-2xl">Récemment consultés</h2>
+            <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
+              {recentlyViewed.map((p) => (
                 <ProductCard
                   key={p.id}
                   product={p}
