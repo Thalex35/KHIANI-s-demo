@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,9 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import { storeSettingsQuery } from "@/lib/admin";
 import { PAYMENT_METHODS, formatPrice } from "@/lib/shop";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { DeliveryMapPicker } from "@/components/shop/DeliveryMapPicker";
 
 export const Route = createFileRoute("/commander")({
   head: () => ({
@@ -46,6 +48,8 @@ type CheckoutForm = {
   city: string;
   country: string;
   notes: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
 };
 
 const DELIVERY_OPTIONS = [
@@ -61,6 +65,7 @@ function CheckoutPage() {
   const queryClient = useQueryClient();
   const { user, profile, loading } = useAuth();
   const { items, subtotal, discount, total, clear } = useCart();
+  const { data: storeSettings = [] } = useQuery(storeSettingsQuery());
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<CheckoutForm>({
     full_name: "",
@@ -69,6 +74,8 @@ function CheckoutPage() {
     city: "",
     country: "France",
     notes: "",
+    delivery_latitude: 48.8566,
+    delivery_longitude: 2.3522,
   });
   const [payment, setPayment] = useState("demo");
   const [delivery, setDelivery] = useState("standard");
@@ -83,7 +90,10 @@ function CheckoutPage() {
 
   const selectedDelivery =
     DELIVERY_OPTIONS.find((option) => option.id === delivery) ?? DELIVERY_OPTIONS[0];
-  const shipping = total >= 80 && delivery === "standard" ? 0 : selectedDelivery.fee;
+  const settingsMap = new Map((storeSettings ?? []).map((row) => [row.key, row.value]));
+  const configuredDeliveryFee = Number.parseFloat(String(settingsMap.get("delivery_fee") ?? "5.90"));
+  const configuredFreeThreshold = Number.parseFloat(String(settingsMap.get("free_shipping_at") ?? "80"));
+  const shipping = total >= configuredFreeThreshold && delivery === "standard" ? 0 : selectedDelivery.id === "standard" ? configuredDeliveryFee : selectedDelivery.fee;
   const totalWithCoupon = total + couponDiscount;
   const grandTotal = totalWithCoupon + shipping;
 
@@ -199,6 +209,53 @@ function CheckoutPage() {
     return true;
   };
 
+  const reverseGeocodeCoordinates = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=fr`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as {
+        address?: {
+          house_number?: string;
+          road?: string;
+          pedestrian?: string;
+          city?: string;
+          town?: string;
+          village?: string;
+          municipality?: string;
+          county?: string;
+          country?: string;
+          country_code?: string;
+        };
+        display_name?: string;
+      };
+
+      const addressParts = payload.address ?? {};
+      const streetPart = [addressParts.house_number, addressParts.road ?? addressParts.pedestrian]
+        .filter(Boolean)
+        .join(" ");
+      const cityPart = addressParts.city ?? addressParts.town ?? addressParts.village ?? addressParts.municipality ?? addressParts.county ?? "";
+      const countryPart = addressParts.country ?? "";
+
+      setForm((current) => ({
+        ...current,
+        address: streetPart || current.address,
+        city: cityPart || current.city,
+        country: countryPart || current.country,
+      }));
+    } catch {
+      // Reverse geocoding is optional; if the service fails, the address fields stay editable.
+    }
+  };
+
   const next = () => {
     if (step <= 2 && !validateStep()) return;
     setStep((current) => Math.min(4, current + 1));
@@ -240,6 +297,8 @@ function CheckoutPage() {
         p_shipping: shipping,
         p_subtotal: subtotal,
         p_total: grandTotal,
+        p_delivery_latitude: form.delivery_latitude ?? null,
+        p_delivery_longitude: form.delivery_longitude ?? null,
         p_items: items.map((item) => ({
           product_id: item.productId,
           size: item.size,
@@ -402,6 +461,20 @@ function CheckoutPage() {
                     />
                   </div>
                   <div className="sm:col-span-2">
+                    <DeliveryMapPicker
+                      latitude={form.delivery_latitude ?? 48.8566}
+                      longitude={form.delivery_longitude ?? 2.3522}
+                      onChange={(coordinates) =>
+                        setForm((current) => ({
+                          ...current,
+                          delivery_latitude: coordinates.latitude,
+                          delivery_longitude: coordinates.longitude,
+                        }))
+                      }
+                      onConfirm={(coordinates) => reverseGeocodeCoordinates(coordinates.latitude, coordinates.longitude)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
                     <Label htmlFor="notes">Instructions de livraison</Label>
                     <Textarea
                       id="notes"
@@ -417,7 +490,7 @@ function CheckoutPage() {
                     <Label
                       key={option.id}
                       htmlFor={`delivery-${option.id}`}
-                      className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent"
+                      className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-border p-3 has-checked:border-accent"
                     >
                       <span className="flex items-center gap-3">
                         <RadioGroupItem id={`delivery-${option.id}`} value={option.id} />
@@ -501,7 +574,7 @@ function CheckoutPage() {
                     <Label
                       key={method.id}
                       htmlFor={`payment-${method.id}`}
-                      className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent"
+                      className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-checked:border-accent"
                     >
                       <RadioGroupItem id={`payment-${method.id}`} value={method.id} />
                       <span>
@@ -516,7 +589,7 @@ function CheckoutPage() {
                     type="checkbox"
                     checked={simulateFailure}
                     onChange={(event) => setSimulateFailure(event.target.checked)}
-                    className="size-4 accent-[var(--color-accent)]"
+                    className="size-4 accent-(--color-accent)"
                   />{" "}
                   Simuler un échec de paiement
                 </label>

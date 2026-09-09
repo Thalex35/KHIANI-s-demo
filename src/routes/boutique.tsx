@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { SlidersHorizontal, X } from "lucide-react";
@@ -85,13 +86,21 @@ function BoutiquePage() {
   const { data: products, isLoading, isError } = useQuery(productsQuery());
   const { data: variants } = useQuery(variantsQuery());
   const stocks = stockByProduct(variants ?? []);
+  const [localQuery, setLocalQuery] = useState(search.q ?? "");
+  const [localMin, setLocalMin] = useState<number | undefined>(search.min);
+  const [localMax, setLocalMax] = useState<number | undefined>(search.max);
 
   const setSearch = (patch: Partial<Search>) =>
     void navigate({ search: (prev) => ({ ...prev, ...patch }) });
 
-  const reset = () => void navigate({ search: {} });
+  const reset = () => {
+    setLocalQuery("");
+    setLocalMin(undefined);
+    setLocalMax(undefined);
+    void navigate({ search: {} });
+  };
 
-  const term = (search.q ?? "").trim().toLowerCase();
+  const term = localQuery.trim().toLowerCase();
   let list = (products ?? []).filter((p) => {
     if (
       term &&
@@ -107,8 +116,8 @@ function BoutiquePage() {
     if (search.size && !p.sizes.includes(search.size)) return false;
     if (search.color && !p.colors.includes(search.color)) return false;
     const price = effectivePrice(p);
-    if (search.min != null && price < search.min) return false;
-    if (search.max != null && price > search.max) return false;
+    if (localMin != null && price < localMin) return false;
+    if (localMax != null && price > localMax) return false;
     if (search.promo && p.sale_price == null) return false;
     const stock = stocks.get(p.id) ?? 0;
     if (search.stock === "en_stock" && stock <= 0) return false;
@@ -143,8 +152,8 @@ function BoutiquePage() {
         <Label htmlFor="recherche">Recherche</Label>
         <Input
           id="recherche"
-          value={search.q ?? ""}
-          onChange={(e) => setSearch({ q: e.target.value || undefined })}
+          value={localQuery}
+          onChange={(e) => setLocalQuery(e.target.value)}
           placeholder="T-shirt, jean, robe noire…"
           className="mt-2"
         />
@@ -216,10 +225,11 @@ function BoutiquePage() {
             inputMode="numeric"
             placeholder="Min"
             aria-label="Prix minimum"
-            value={search.min ?? ""}
-            onChange={(e) =>
-              setSearch({ min: e.target.value ? Number(e.target.value) : undefined })
-            }
+            value={localMin ?? ""}
+            onChange={(e) => {
+              const next = e.target.value ? Number(e.target.value) : undefined;
+              setLocalMin(next);
+            }}
           />
           <span className="text-muted-foreground">—</span>
           <Input
@@ -227,10 +237,11 @@ function BoutiquePage() {
             inputMode="numeric"
             placeholder="Max"
             aria-label="Prix maximum"
-            value={search.max ?? ""}
-            onChange={(e) =>
-              setSearch({ max: e.target.value ? Number(e.target.value) : undefined })
-            }
+            value={localMax ?? ""}
+            onChange={(e) => {
+              const next = e.target.value ? Number(e.target.value) : undefined;
+              setLocalMax(next);
+            }}
           />
         </div>
       </div>
@@ -302,7 +313,7 @@ function BoutiquePage() {
                 value={search.sort ?? "featured"}
                 onValueChange={(v) => setSearch({ sort: v as Search["sort"] })}
               >
-                <SelectTrigger className="w-[170px]" aria-label="Trier les produits">
+                <SelectTrigger className="w-42.5" aria-label="Trier les produits">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

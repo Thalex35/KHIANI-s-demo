@@ -41,7 +41,6 @@ type ProductReview = {
   unhelpful_count: number;
   created_at: string;
   product?: { name: string; slug: string };
-  user?: { email: string };
 };
 
 const reviewsQuery = () => ({
@@ -49,7 +48,7 @@ const reviewsQuery = () => ({
   queryFn: async () => {
     const { data, error } = await supabase
       .from("product_reviews")
-      .select("*, product:products(name,slug), user:auth.users(email)")
+      .select("*, product:products(name,slug)")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw error;
@@ -86,7 +85,7 @@ function AdminReviews() {
   });
 
   const list = filtered.filter((r) =>
-    `${r.product?.name || ""} ${r.content} ${r.user?.email || ""}`
+    `${r.product?.name || ""} ${r.content}`
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
   );

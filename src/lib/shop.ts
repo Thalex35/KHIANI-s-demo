@@ -67,9 +67,54 @@ export const PAYMENT_METHODS = [
   { id: "paypal", label: "PayPal", hint: "Bientôt disponible" },
 ];
 
+export const CURRENCY_OPTIONS = [
+  { value: "EUR", label: "Euro (€)", rate: 1 },
+  { value: "USD", label: "Dollar ($)", rate: 1.08 },
+  { value: "HTG", label: "Gourdes (HTG)", rate: 145 },
+] as const;
+
+export const resolveCurrencyCode = () => {
+  if (typeof window === "undefined") return "EUR";
+  const stored = window.localStorage.getItem("shop_currency");
+  if (stored === "USD" || stored === "HTG" || stored === "EUR") return stored;
+  return "EUR";
+};
+
+export const getCurrencyRate = (currency = resolveCurrencyCode()) =>
+  CURRENCY_OPTIONS.find((option) => option.value === currency)?.rate ?? 1;
+
+export const formatCurrencyAmount = (value: number | string | null | undefined, explicitCurrency?: string) => {
+  const n = typeof value === "string" ? Number(value) : (value ?? 0);
+  const currency = explicitCurrency ?? resolveCurrencyCode();
+  const option = CURRENCY_OPTIONS.find((c) => c.value === currency) ?? CURRENCY_OPTIONS[0];
+  const converted = n * option.rate;
+
+  if (currency === "HTG") {
+    return `${Math.round(converted)}`;
+  }
+
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(converted || 0);
+};
+
 export const formatPrice = (value: number | string | null | undefined) => {
   const n = typeof value === "string" ? Number(value) : (value ?? 0);
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n || 0);
+  const currency = resolveCurrencyCode();
+  const option = CURRENCY_OPTIONS.find((c) => c.value === currency) ?? CURRENCY_OPTIONS[0];
+  const converted = n * option.rate;
+
+  if (currency === "HTG") {
+    return `${Math.round(converted)} HTG`;
+  }
+
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(converted || 0);
 };
 
 export const formatDate = (value: string) =>

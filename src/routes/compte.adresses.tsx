@@ -229,7 +229,7 @@ function AddressesPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, is_default: event.target.checked }))
                 }
-                className="size-4 accent-[var(--color-accent)]"
+                className="size-4 accent-(--color-accent)"
               />
               Utiliser comme adresse par défaut
             </label>
