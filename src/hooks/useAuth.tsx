@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsTester(false);
       return;
     }
+
     const [{ data: prof }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -92,10 +93,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!session?.user.id) return;
-    void supabase
-      .from("profiles")
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq("id", session.user.id);
+
+    const userId = session.user.id;
+    const sessionId = window.sessionStorage.getItem("presence_session_id") ?? crypto.randomUUID();
+    window.sessionStorage.setItem("presence_session_id", sessionId);
+
+    const upsertPresence = async (online: boolean) => {
+      const now = new Date().toISOString();
+      const payload = {
+        user_id: userId,
+        is_online: online,
+        last_active: now,
+        session_id: sessionId,
+        updated_at: now,
+      };
+
+      await supabase
+        .from("user_status" as any)
+        .upsert(payload, { onConflict: "user_id" });
+    };
+
+    const markOnline = () => void upsertPresence(true);
+    const markOffline = () => void upsertPresence(false);
+
+    markOnline();
+
+    const interval = window.setInterval(markOnline, 30_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        void upsertPresence(false);
+      } else {
+        void upsertPresence(true);
+      }
+    };
+
+    const onPageHide = () => {
+      void upsertPresence(false);
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onPageHide);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onPageHide);
+      void upsertPresence(false);
+    };
   }, [session?.user.id]);
 
   const value: AuthContextValue = {

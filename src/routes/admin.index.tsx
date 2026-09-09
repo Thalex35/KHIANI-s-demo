@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bar,
   BarChart,
@@ -14,15 +15,19 @@ import {
 } from "recharts";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 import { productsQuery, stockByProduct, variantsQuery } from "@/lib/catalog";
 import {
+  adminActiveUsersQuery,
   adminFavoritesQuery,
   adminOrdersQuery,
   adminProfilesQuery,
+  adminUserStatusRealtimeListener,
   daysAgo,
   isSameDay,
 } from "@/lib/admin";
-import { STATUS_CLASSES, STATUS_LABELS, formatDate, formatPrice } from "@/lib/shop";
+import { STATUS_CLASSES, STATUS_LABELS, formatDate, formatDateTime, formatPrice } from "@/lib/shop";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/")({
@@ -41,11 +46,27 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
   const { data: products = [] } = useQuery(productsQuery(true));
   const { data: variants = [] } = useQuery(variantsQuery());
   const { data: orders = [] } = useQuery(adminOrdersQuery());
   const { data: profiles = [] } = useQuery(adminProfilesQuery());
   const { data: favorites = [] } = useQuery(adminFavoritesQuery());
+  const { data: activeUsers = [] } = useQuery(
+    isAdmin ? adminActiveUsersQuery() : { queryKey: ["admin", "active-users", "blocked"], queryFn: async () => [] },
+  );
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const cleanup = adminUserStatusRealtimeListener(() => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "active-users"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "user-status"] });
+    });
+
+    return cleanup;
+  }, [isAdmin, queryClient]);
 
   const stock = stockByProduct(variants);
   const inStock = products.filter((p) => (stock.get(p.id) ?? 0) > 0).length;
@@ -128,6 +149,38 @@ function AdminDashboard() {
         </>
       }
     >
+      {isAdmin && (
+        <section className="surface-card mt-6 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Active Users</h2>
+              <p className="text-xs text-muted-foreground">{activeUsers.length} utilisateur(s) connecté(s)</p>
+            </div>
+            <Badge variant="outline" className="text-xs">Admin only</Badge>
+          </div>
+          {activeUsers.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">Aucun utilisateur actif pour le moment.</p>
+          ) : (
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {activeUsers.map((user) => (
+                <div key={user.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-sm">{user.first_name} {user.last_name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold text-emerald-700">online</span>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{user.role}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">Dernière activité : {formatDateTime(user.last_seen_at)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {cards.map((card) => (
           <div key={card.label} className="surface-card p-4">
