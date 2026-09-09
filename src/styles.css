@@ -134,6 +134,21 @@
   --sidebar-ring: oklch(0.65 0.13 42);
 }
 
+.leaflet-container {
+  min-height: 260px;
+}
+
+.map-pin-selected {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-pin-selected svg {
+  width: 30px;
+  height: 30px;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

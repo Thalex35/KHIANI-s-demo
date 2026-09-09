@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { EmptyState } from "@/components/site/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { storeSettingsQuery } from "@/lib/admin";
 import { formatPrice } from "@/lib/shop";
 import { itemKey, type CartItem, useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,8 +30,12 @@ export const Route = createFileRoute("/panier")({
 function CartPage() {
   const { items, subtotal, discount, total, addItem, updateQuantity, removeItem } = useCart();
   const { user } = useAuth();
+  const { data: storeSettings = [] } = useQuery(storeSettingsQuery());
   const [saved, setSaved] = useState<CartItem[]>([]);
-  const shipping = total >= 80 || total === 0 ? 0 : 5.9;
+  const settingsMap = new Map((storeSettings ?? []).map((row) => [row.key, row.value]));
+  const configuredDeliveryFee = Number.parseFloat(String(settingsMap.get("delivery_fee") ?? "5.90"));
+  const configuredFreeThreshold = Number.parseFloat(String(settingsMap.get("free_shipping_at") ?? "80"));
+  const shipping = total >= configuredFreeThreshold || total === 0 ? 0 : configuredDeliveryFee;
 
   useEffect(() => {
     try {

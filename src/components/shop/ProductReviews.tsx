@@ -19,7 +19,6 @@ type Review = {
   helpful_count: number;
   unhelpful_count: number;
   created_at: string;
-  user?: { email: string };
 };
 
 const schema = z.object({
@@ -45,7 +44,7 @@ export function ProductReviews({ productId }: { productId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_reviews")
-        .select("*, user:auth.users(email)")
+        .select("*")
         .eq("product_id", productId)
         .eq("is_approved", true)
         .eq("is_hidden", false)
@@ -54,6 +53,24 @@ export function ProductReviews({ productId }: { productId: string }) {
       return (data as Review[]) || [];
     },
   });
+
+  const { data: reviewVotes = [] } = useQuery({
+    queryKey: ["review-helpfulness", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("review_helpfulness")
+        .select("review_id, is_helpful")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return (data as Array<{ review_id: string; is_helpful: boolean }>) || [];
+    },
+    enabled: Boolean(user),
+  });
+
+  const voteByReview = new Map(
+    (reviewVotes as Array<{ review_id: string; is_helpful: boolean }>).map((vote) => [vote.review_id, vote.is_helpful]),
+  );
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -97,7 +114,7 @@ export function ProductReviews({ productId }: { productId: string }) {
           rating: parsed.data.rating,
           title: parsed.data.title || null,
           content: parsed.data.content,
-          is_approved: false,
+          is_approved: true,
           is_hidden: false,
         });
 
@@ -121,13 +138,31 @@ export function ProductReviews({ productId }: { productId: string }) {
     }
 
     try {
-      await supabase.from("review_helpfulness").upsert({
-        review_id: reviewId,
-        user_id: user.id,
-        is_helpful: isHelpful,
+      const { data, error } = await supabase.rpc("toggle_review_helpfulness", {
+        p_review_id: reviewId,
+        p_user_id: user.id,
+        p_is_helpful: isHelpful,
       });
 
+      if (error) throw error;
+
+      const updated = Array.isArray(data) ? data[0] : null;
+      if (updated) {
+        queryClient.setQueryData<Review[]>(["product-reviews", productId], (current = []) =>
+          current.map((review) =>
+            review.id === reviewId
+              ? {
+                  ...review,
+                  helpful_count: Number(updated.helpful_count) ?? review.helpful_count,
+                  unhelpful_count: Number(updated.unhelpful_count) ?? review.unhelpful_count,
+                }
+              : review,
+          ),
+        );
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["product-reviews", productId] });
+      await queryClient.invalidateQueries({ queryKey: ["review-helpfulness", user.id] });
     } catch (err) {
       toast.error("Une erreur est survenue");
     }
@@ -306,8 +341,7 @@ export function ProductReviews({ productId }: { productId: string }) {
                     )}
                     <p className="text-sm text-foreground mb-2">{review.content}</p>
                     <p className="text-xs text-muted-foreground">
-                      Par {review.user?.email || "Utilisateur"} le{" "}
-                      {formatDate(review.created_at)}
+                      Par Utilisateur le {formatDate(review.created_at)}
                     </p>
                   </div>
                 </div>
@@ -316,20 +350,20 @@ export function ProductReviews({ productId }: { productId: string }) {
                   <span className="text-xs text-muted-foreground">Utile ?</span>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant={voteByReview.get(review.id) === true ? "default" : "ghost"}
                     onClick={() => markHelpful(review.id, true)}
                     className="gap-1 text-xs h-7"
                   >
-                    <ThumbsUp className="size-3" />
+                    <ThumbsUp className={`size-3 ${voteByReview.get(review.id) === true ? "fill-white" : ""}`} />
                     {review.helpful_count}
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant={voteByReview.get(review.id) === false ? "default" : "ghost"}
                     onClick={() => markHelpful(review.id, false)}
                     className="gap-1 text-xs h-7"
                   >
-                    <ThumbsDown className="size-3" />
+                    <ThumbsDown className={`size-3 ${voteByReview.get(review.id) === false ? "fill-white" : ""}`} />
                     {review.unhelpful_count}
                   </Button>
                 </div>

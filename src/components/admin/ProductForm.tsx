@@ -51,6 +51,8 @@ type Draft = {
   is_active: boolean;
 };
 
+const SETTINGS_BUCKET = "product-images";
+
 const emptyDraft: Draft = {
   name: "",
   description: "",
@@ -124,6 +126,39 @@ export function ProductForm({
 
   const toggle = (list: string[], value: string, setter: (v: string[]) => void) =>
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+
+  const uploadCoverImage = async (file: File) => {
+    const safeName = file.name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9._-]+/g, "-");
+    const path = `uploads/${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+    const { data: publicUrlData } = supabase.storage.from("product-images").getPublicUrl(path);
+    return publicUrlData.publicUrl;
+  };
+
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setSaving(true);
+      const url = await uploadCoverImage(file);
+      setDraft((d) => ({ ...d, cover_url: url }));
+      toast.success("Image chargée");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Le chargement de l’image a échoué.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,21 +357,35 @@ export function ProductForm({
       <section className="surface-card p-5">
         <h2 className="text-lg">Images</h2>
         <div className="mt-4 grid gap-4">
-          <div>
-            <Label htmlFor="cover_url">Image principale (chemin ou URL)</Label>
-            <Input id="cover_url" value={draft.cover_url} onChange={set("cover_url")} className="mt-1.5" />
+          <div className="rounded-xl border border-border bg-white/50 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <label htmlFor="cover_file" className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#9b6940] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#7b5632] focus:outline-none focus:ring-2 focus:ring-[#9b6940] focus:ring-offset-2">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 16a4 4 0 0 0 0-8 4 4 0 0 0 0 8z" />
+                  <path d="M12 3a9 9 0 0 0-7 3.6" />
+                  <path d="M21 15v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5" />
+                </svg>
+                Télécharger une image principale
+              </label>
+              <Input id="cover_file" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+              <span className="text-sm text-muted-foreground">
+                {draft.cover_url ? "Image prête" : "Aucune image sélectionnée"}
+              </span>
+            </div>
           </div>
           <div>
             <Label htmlFor="images">Galerie — une image par ligne</Label>
             <Textarea id="images" rows={3} value={draft.images} onChange={set("images")} className="mt-1.5" />
           </div>
           {draft.cover_url && (
-            <img
-              src={draft.cover_url}
-              alt="Aperçu"
-              className="size-32 rounded-md object-cover"
-              loading="lazy"
-            />
+            <div className="mt-2 flex items-center">
+              <img
+                src={draft.cover_url}
+                alt="Aperçu"
+                className="size-32 rounded-md object-cover border border-border shadow-sm"
+                loading="lazy"
+              />
+            </div>
           )}
         </div>
       </section>
