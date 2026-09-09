@@ -60,11 +60,12 @@ function ProductPage() {
 
   const { data: products, isLoading } = useQuery(productsQuery());
   const { data: variants } = useQuery(variantsQuery());
-  const productId = product?.id;
-  const recentlyViewedIds = useRecentlyViewed(productId);
 
   const product = (products ?? []).find((p) => p.slug === slug);
   const productVariants = (variants ?? []).filter((v) => v.product_id === product?.id);
+
+  const productId = product?.id;
+  const recentlyViewedIds = useRecentlyViewed(productId);
 
   const [size, setSize] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
