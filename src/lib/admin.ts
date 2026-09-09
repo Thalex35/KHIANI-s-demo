@@ -42,6 +42,35 @@ export type AdminProfile = {
   last_seen_at: string;
 };
 
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  status: "new" | "read" | "resolved";
+  created_at: string;
+  updated_at: string;
+};
+
+export type NewsletterSubscriber = {
+  id: string;
+  email: string;
+  status: "active" | "inactive";
+  subscribed_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StoreSetting = {
+  id: string;
+  key: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export const adminOrdersQuery = () =>
   queryOptions({
     queryKey: ["admin", "orders"],
@@ -75,6 +104,45 @@ export const adminRolesQuery = () =>
       const { data, error } = await supabase.from("user_roles").select("user_id, role");
       if (error) throw error;
       return (data ?? []) as unknown as { user_id: string; role: "admin" | "user" }[];
+    },
+  });
+
+export const adminContactMessagesQuery = () =>
+  queryOptions({
+    queryKey: ["admin", "contact-messages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contact_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ContactMessage[];
+    },
+  });
+
+export const adminNewsletterSubscribersQuery = () =>
+  queryOptions({
+    queryKey: ["admin", "newsletter-subscribers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("newsletter_subscribers")
+        .select("*")
+        .order("subscribed_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as NewsletterSubscriber[];
+    },
+  });
+
+export const storeSettingsQuery = () =>
+  queryOptions({
+    queryKey: ["store", "settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as StoreSetting[];
     },
   });
 
