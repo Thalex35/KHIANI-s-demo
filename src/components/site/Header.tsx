@@ -69,8 +69,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-[#f8f4ee]/95 backdrop-blur-xl shadow-[0_1px_0_rgba(30,20,10,0.04)]">
       <div className="border-b border-border/60 bg-[#f8f4ee]">
-        <div className="container-page flex h-16 items-center gap-4">
-          <div className="flex min-w-45 items-center gap-2">
+        <div className="container-page flex h-16 items-center gap-2 sm:gap-4">
+          <div className="flex min-w-0 items-center gap-2 sm:min-w-45">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden rounded-full border border-border/70" aria-label="Ouvrir le menu">
@@ -174,7 +174,7 @@ export function Header() {
             </form>
           </div>
 
-          <div className="flex min-w-45 items-center justify-end gap-1">
+          <div className="flex min-w-0 items-center justify-end gap-1 sm:min-w-45">
             <Button asChild variant="ghost" size="icon" className="rounded-full" aria-label="Mes favoris">
               <Link to={user ? "/compte/favoris" : "/connexion"}>
                 <Heart className="size-5" />
